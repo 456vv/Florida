@@ -24,4 +24,3 @@ index e08134e9..422efe31 100644
          embedded_agent = priv_dir / "frida-agent.so"
 -- 
 2.39.2 (Apple Git-143)
-
