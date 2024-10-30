@@ -1,44 +1,18 @@
-diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
-new file mode 100644
-index 0000000..d7abf92
---- /dev/null
-+++ b/src/anti-anti-frida.py
-@@ -0,0 +1,34 @@
-+import sys
-+import lief
-+import random
-+import os
-+import string
-+
-+if __name__ == "__main__":
-+    input_file = sys.argv[1]
-+    print(f"[*] Patch frida-agent: {input_file}")
-+    random_name = "".join(random.sample("ABCDEFGHIJKLMNO", 5))
-+    print(f"[*] Patch `frida` to `{random_name}``")
-+
-+    binary = lief.parse(input_file)
-+
-+    if not binary:
-+        exit()
-+
-+    for symbol in binary.symbols:
-+        if symbol.name == "frida_agent_main":
-+            symbol.name = "main"
-+        
-+        if "frida" in symbol.name:
-+            symbol.name = symbol.name.replace("frida", random_name)
-+
-+        if "FRIDA" in symbol.name:
-+            symbol.name = symbol.name.replace("FRIDA", random_name)
-+
-+    for i in ["gum-js-loop", "gmain", "gdbus"]:
-+        random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
-+        print(f"[*] Patch `{i}` to `{random_name}`")
-+        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
-+        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
-+
-+    binary.write(input_file)
-\ No newline at end of file
+diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
+index ed84fc4..1efff27 100644
+--- a/src/linux/frida-helper-backend.vala
++++ b/src/linux/frida-helper-backend.vala
+@@ -3236,9 +3236,9 @@ namespace Frida {
+ 			return fd;
+ 		}
+ 
+ 		private int memfd_create (string name, uint flags) {
+-			return Linux.syscall (SysCall.memfd_create, name, flags);
++			return Linux.syscall (SysCall.memfd_create, "jit-cache", flags);
+ 		}
+ 	}
+ 
+ 	private void make_pty (out FileDescriptor read, out FileDescriptor write) throws Error {
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
 index 3695ba8..664bd19 100644
 --- a/lib/base/rpc.vala
@@ -271,21 +245,6 @@ index ee8f073..65deb86 100644
      {
        main_context = g_main_context_ref (g_main_context_default ());
        main_loop = g_main_loop_new (main_context, FALSE);
-diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index ed84fc4..1efff27 100644
---- a/src/linux/frida-helper-backend.vala
-+++ b/src/linux/frida-helper-backend.vala
-@@ -3236,9 +3236,9 @@ namespace Frida {
- 			return fd;
- 		}
- 
- 		private int memfd_create (string name, uint flags) {
--			return Linux.syscall (SysCall.memfd_create, name, flags);
-+			return Linux.syscall (SysCall.memfd_create, "jit-cache", flags);
- 		}
- 	}
- 
- 	private void make_pty (out FileDescriptor read, out FileDescriptor write) throws Error {
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
 index 50470ac..a3473d4 100644
 --- a/src/linux/linux-host-session.vala
@@ -380,3 +339,43 @@ index 03c219e..a7720c3 100644
  				printerr ("\nFAIL: %s\n\n", e.message);
  				assert_not_reached ();
  			}
+diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
+new file mode 100644
+index 0000000..0ee3e6a
+--- /dev/null
++++ b/src/anti-anti-frida.py
+@@ -0,0 +1,34 @@
++import sys
++import lief
++import random
++import os
++import string
++
++if __name__ == "__main__":
++    input_file = sys.argv[1]
++    print(f"[*] Patch frida-agent: {input_file}")
++    random_name = "".join(random.sample("ABCDEFGHIJKLMNO", 5))
++    print(f"[*] Patch `frida` to `{random_name}``")
++
++    binary = lief.parse(input_file)
++
++    if not binary:
++        exit()
++
++    for symbol in binary.symbols:
++        if symbol.name == "frida_agent_main":
++            symbol.name = "main"
++        
++        if "frida" in symbol.name:
++            symbol.name = symbol.name.replace("frida", random_name)
++
++        if "FRIDA" in symbol.name:
++            symbol.name = symbol.name.replace("FRIDA", random_name)
++
++    binary.write(input_file)
++
++    for i in ["gum-js-loop", "gmain", "gdbus"]:
++        random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
++        print(f"[*] Patch `{i}` to `{random_name}`")
++        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
++        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
