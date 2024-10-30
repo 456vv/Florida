@@ -144,13 +144,18 @@ jobs:
         
         export ANDROID_NDK_ROOT=${{ steps.setup-ndk.outputs.ndk-path }}
         echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
-        
+		
+        FRIDA_PREFIX="$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 5)"
+        SESSION_SERVICE="$(tr -cd 'a-f0-9' </dev/urandom | head -c32)"
+		
         git clone --recurse-submodules https://github.com/frida/frida
         cd frida
         for path in ../patches/*
         do
           name=$(basename $path)
           real=$(realpath $path)
+          sed -i 's/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g' ../../../patches/$name/*.patch
+          sed -i 's/{SESSION_SERVICE}/${SESSION_SERVICE}/g' ../../../patches/$name/*.patch
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
           git am ../../../patches/$name/*.patch
