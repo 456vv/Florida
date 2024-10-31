@@ -147,7 +147,7 @@ jobs:
         
         FRIDA_PREFIX="$(head /dev/urandom -c 200 | tr -dc A-Za-z0-9 | head -c 5)"
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
-        RANDOM_SEED="$(head /dev/urandom -c 200 | tr -cd '0-9' | head -c 10)"
+        RANDOM_SEED="$(head /dev/urandom -c 200 | tr -cd '1-9' | head -c 10)"
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
         echo "git clone --recurse-submodules -b ${FRIDA_VERSION} https://github.com/frida/frida"
