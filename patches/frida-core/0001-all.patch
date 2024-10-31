@@ -1,90 +1,19 @@
-From 45cded01bc913da4e04f3244b723527fe8e75ad3 Mon Sep 17 00:00:00 2001
+From fc2ee59320aace0e34e8460eda46c53053fb93ea Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 20:18:31 +0800
+Date: Thu, 31 Oct 2024 22:11:56 +0800
 Subject: [PATCH] all
 
 ---
- lib/agent/agent-glue.c                |  2 +-
- lib/agent/frida-agent-x86.symbols     |  2 +-
- lib/agent/frida-agent.def             |  2 +-
- lib/agent/frida-agent.symbols         |  2 +-
- lib/agent/frida-agent.version         |  2 +-
- lib/agent/meson.build                 |  2 +-
- server/server.vala                    |  3 +-
- src/agent-container.vala              |  2 +-
- src/anti-anti-frida.py                | 56 +++++++++++++++++++++++++++
- src/darwin/darwin-host-session.vala   |  2 +-
- src/droidy/droidy-client.vala         |  2 +-
- src/freebsd/binjector-glue.c          |  2 +-
- src/freebsd/freebsd-host-session.vala |  2 +-
- src/frida-glue.c                      |  1 +
- src/linux/frida-helper-backend.vala   |  2 +-
- src/linux/linux-host-session.vala     |  9 +++--
- src/qnx/qnx-host-session.vala         |  2 +-
- src/windows/windows-host-session.vala |  2 +-
- 18 files changed, 78 insertions(+), 19 deletions(-)
+ server/server.vala                  |  3 +-
+ src/anti-anti-frida.py              | 56 +++++++++++++++++++++++++++++
+ src/droidy/droidy-client.vala       |  2 +-
+ src/freebsd/binjector-glue.c        |  2 +-
+ src/frida-glue.c                    |  1 +
+ src/linux/frida-helper-backend.vala |  2 +-
+ src/linux/linux-host-session.vala   |  7 ++--
+ 7 files changed, 66 insertions(+), 7 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
-diff --git a/lib/agent/agent-glue.c b/lib/agent/agent-glue.c
-index a8affba..dcf4126 100644
---- a/lib/agent/agent-glue.c
-+++ b/lib/agent/agent-glue.c
-@@ -72,7 +72,7 @@ JNI_OnLoad (JavaVM * vm, void * reserved)
- {
-   FridaAgentBridgeState * state = reserved;
- 
--  frida_agent_main (state->agent_parameters, &state->unload_policy, state->injector_state);
-+  {FRIDA_PREFIX}_agent_main (state->agent_parameters, &state->unload_policy, state->injector_state);
- 
-   return JNI_VERSION_1_6;
- }
-diff --git a/lib/agent/frida-agent-x86.symbols b/lib/agent/frida-agent-x86.symbols
-index 253690b..d8d047b 100644
---- a/lib/agent/frida-agent-x86.symbols
-+++ b/lib/agent/frida-agent-x86.symbols
-@@ -1 +1 @@
--_frida_agent_main
-+_{FRIDA_PREFIX}_agent_main
-diff --git a/lib/agent/frida-agent.def b/lib/agent/frida-agent.def
-index 7634e3f..04b1d64 100644
---- a/lib/agent/frida-agent.def
-+++ b/lib/agent/frida-agent.def
-@@ -1,2 +1,2 @@
- EXPORTS
--	frida_agent_main
-+	{FRIDA_PREFIX}_agent_main
-diff --git a/lib/agent/frida-agent.symbols b/lib/agent/frida-agent.symbols
-index 53d1914..c0a3ab1 100644
---- a/lib/agent/frida-agent.symbols
-+++ b/lib/agent/frida-agent.symbols
-@@ -1 +1 @@
--frida_agent_main
-+{FRIDA_PREFIX}_agent_main
-diff --git a/lib/agent/frida-agent.version b/lib/agent/frida-agent.version
-index c273bd0..34c545c 100644
---- a/lib/agent/frida-agent.version
-+++ b/lib/agent/frida-agent.version
-@@ -1,6 +1,6 @@
- {
-   global:
--    frida_agent_main;
-+    {FRIDA_PREFIX}_agent_main;
-     JNI_OnLoad;
- 
-   local:
-diff --git a/lib/agent/meson.build b/lib/agent/meson.build
-index 0aab035..9132718 100644
---- a/lib/agent/meson.build
-+++ b/lib/agent/meson.build
-@@ -26,7 +26,7 @@ if host_os_family == 'windows'
-     extra_link_depends += symfile
-   endif
- elif host_os_family == 'darwin'
--  extra_link_args += '-Wl,-exported_symbol,_frida_agent_main'
-+  extra_link_args += '-Wl,-exported_symbol,_{FRIDA_PREFIX}_agent_main'
- else
-   symscript = 'frida-agent.version'
-   extra_link_args += '-Wl,--version-script,' + meson.current_source_dir() / symscript
 diff --git a/server/server.vala b/server/server.vala
 index 525c145..97d0905 100644
 --- a/server/server.vala
@@ -106,19 +35,6 @@ index 525c145..97d0905 100644
  		Environment.init ();
  
  #if DARWIN
-diff --git a/src/agent-container.vala b/src/agent-container.vala
-index 73e0c01..cce3f44 100644
---- a/src/agent-container.vala
-+++ b/src/agent-container.vala
-@@ -28,7 +28,7 @@ namespace Frida {
- 			}
- 
- 			void * main_func_symbol;
--			var main_func_found = container.module.symbol ("frida_agent_main", out main_func_symbol);
-+			var main_func_found = container.module.symbol ("{FRIDA_PREFIX}_agent_main", out main_func_symbol);
- 			assert (main_func_found);
- 			container.main_impl = (AgentMainFunc) main_func_symbol;
- 
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
 index 0000000..573527f
@@ -181,19 +97,6 @@ index 0000000..573527f
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
 +        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
-diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
-index ab9b290..99e3ef8 100644
---- a/src/darwin/darwin-host-session.vala
-+++ b/src/darwin/darwin-host-session.vala
-@@ -381,7 +381,7 @@ namespace Frida {
- 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
- 			uint id;
- 
--			unowned string entrypoint = "frida_agent_main";
-+			unowned string entrypoint = "{FRIDA_PREFIX}_agent_main";
- #if HAVE_EMBEDDED_ASSETS
- 			id = yield fruitjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
- #else
 diff --git a/src/droidy/droidy-client.vala b/src/droidy/droidy-client.vala
 index ddc56cc..c3464e7 100644
 --- a/src/droidy/droidy-client.vala
@@ -220,19 +123,6 @@ index 2bdce0a..02d9b57 100644
  
    mkfifo (self->fifo_path, mode);
    chmod (self->fifo_path, mode);
-diff --git a/src/freebsd/freebsd-host-session.vala b/src/freebsd/freebsd-host-session.vala
-index a2204a4..e464fce 100644
---- a/src/freebsd/freebsd-host-session.vala
-+++ b/src/freebsd/freebsd-host-session.vala
-@@ -197,7 +197,7 @@ namespace Frida {
- 
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
--			var id = yield binjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
-+			var id = yield binjector.inject_library_resource (pid, agent_desc, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
 diff --git a/src/frida-glue.c b/src/frida-glue.c
 index ee8f073..678829a 100644
 --- a/src/frida-glue.c
@@ -259,7 +149,7 @@ index ed84fc4..1efff27 100644
  	}
  
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
-index 50470ac..72c6e7e 100644
+index 50470ac..6424579 100644
 --- a/src/linux/linux-host-session.vala
 +++ b/src/linux/linux-host-session.vala
 @@ -128,12 +128,13 @@ namespace Frida {
@@ -279,41 +169,6 @@ index 50470ac..72c6e7e 100644
  				},
  				AgentMode.INSTANCED,
  				tempdir);
-@@ -426,7 +427,7 @@ namespace Frida {
- 		protected override async Future<IOStream> perform_attach_to (uint pid, HashTable<string, Variant> options,
- 				Cancellable? cancellable, out Object? transport) throws Error, IOError {
- 			uint id;
--			string entrypoint = "frida_agent_main";
-+			string entrypoint = "{FRIDA_PREFIX}_agent_main";
- 			string parameters = make_agent_parameters (pid, "", options);
- 			AgentFeatures features = CONTROL_CHANNEL;
- 			var linjector = (Linjector) injector;
-diff --git a/src/qnx/qnx-host-session.vala b/src/qnx/qnx-host-session.vala
-index 69f2995..216458c 100644
---- a/src/qnx/qnx-host-session.vala
-+++ b/src/qnx/qnx-host-session.vala
-@@ -182,7 +182,7 @@ namespace Frida {
- 
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
--			var id = yield qinjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
-+			var id = yield qinjector.inject_library_resource (pid, agent_desc, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
-diff --git a/src/windows/windows-host-session.vala b/src/windows/windows-host-session.vala
-index 5492edf..0c92e8e 100644
---- a/src/windows/windows-host-session.vala
-+++ b/src/windows/windows-host-session.vala
-@@ -292,7 +292,7 @@ namespace Frida {
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
- 			var winjector = injector as Winjector;
--			var id = yield winjector.inject_library_resource (pid, agent, "frida_agent_main",
-+			var id = yield winjector.inject_library_resource (pid, agent, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
 -- 
 2.47.0.windows.2
 

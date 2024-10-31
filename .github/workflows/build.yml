@@ -147,6 +147,7 @@ jobs:
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
         FRIDA_PREFIX="$(head /dev/urandom -c 100 | tr -dc a-z | head -c 5)"
+        FRIDA_PREFIX_U="$(echo ${FRIDA_PREFIX} | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         RANDOM_SEED=$(echo "$FRIDA_VERSION" | sed 's/[v\.]//g')
         
@@ -158,6 +159,7 @@ jobs:
           name=$(basename $path)
           real=$(realpath $path)
           sed -i "s/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g" $path/*.patch
+          sed -i "s/{FRIDA_PREFIX_U}/${FRIDA_PREFIX_U}/g" $path/*.patch
           sed -i "s/{SESSION_SERVICE}/${SESSION_SERVICE}/g" $path/*.patch
           sed -i "s/{RANDOM_SEED}/${RANDOM_SEED}/g" $path/*.patch
           echo "$path"
