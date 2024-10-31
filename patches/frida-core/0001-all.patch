@@ -1,6 +1,6 @@
-From 11b950fc586429a16622c5683f95acf48affc07f Mon Sep 17 00:00:00 2001
+From 45cded01bc913da4e04f3244b723527fe8e75ad3 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 18:32:05 +0800
+Date: Thu, 31 Oct 2024 20:18:31 +0800
 Subject: [PATCH] all
 
 ---
@@ -46,7 +46,7 @@ index 253690b..d8d047b 100644
 -_frida_agent_main
 +_{FRIDA_PREFIX}_agent_main
 diff --git a/lib/agent/frida-agent.def b/lib/agent/frida-agent.def
-index 7634e3f..b652bb0 100644
+index 7634e3f..04b1d64 100644
 --- a/lib/agent/frida-agent.def
 +++ b/lib/agent/frida-agent.def
 @@ -1,2 +1,2 @@

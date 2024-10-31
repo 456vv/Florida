@@ -163,7 +163,7 @@ jobs:
           echo "$path"
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
-          git am  ../../../patches/$name/*.patch
+          git am --ignore-space-change  ../../../patches/$name/*.patch
           cd ../..
           echo $i
         done
