@@ -161,7 +161,7 @@ jobs:
           echo "$path"
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
-          git am  --show-current-patch=diff ../../../patches/$name/*.patch
+          git am  ../../../patches/$name/*.patch
           cd ../..
           echo $i
         done
