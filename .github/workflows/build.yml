@@ -149,7 +149,8 @@ jobs:
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
-        git clone --recurse-submodules -b $FRIDA_VERSION https://github.com/frida/frida
+        echo "git clone --recurse-submodules --branch ${FRIDA_VERSION} https://github.com/frida/frida"
+        git clone --recurse-submodules --branch $FRIDA_VERSION https://github.com/frida/frida
         cd frida
         for path in ../patches/*
         do
