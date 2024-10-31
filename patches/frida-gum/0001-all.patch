@@ -1,10 +1,10 @@
-From 4ea54cf234eb24791c953beb6692aff0e3b601b7 Mon Sep 17 00:00:00 2001
+From f82bb260146cd5175dd1a1e6d2b80016bd904699 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 08:33:57 +0800
+Date: Thu, 31 Oct 2024 10:41:55 +0800
 Subject: [PATCH] all
 
 ---
- bindings/gumjs/generate-runtime.py | 11 +++++++++--
+ bindings/gumjs/generate-runtime.py |  9 ++++++++-
  bindings/gumjs/gumquickcore.c      | 23 +++++++++++++++++++++++
  bindings/gumjs/gumv8core.cpp       | 26 ++++++++++++++++++++++++++
  bindings/gumjs/meson.build         |  1 +
@@ -12,10 +12,10 @@ Subject: [PATCH] all
  gum/gum.c                          |  2 +-
  meson.build                        |  8 +++++++-
  meson.options                      |  6 ++++++
- 8 files changed, 75 insertions(+), 4 deletions(-)
+ 8 files changed, 74 insertions(+), 3 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
-index 0b58a0f..ea9698c 100644
+index 0b58a0f..a37dbb3 100644
 --- a/bindings/gumjs/generate-runtime.py
 +++ b/bindings/gumjs/generate-runtime.py
 @@ -16,7 +16,8 @@ RELAXED_DEPS = {
@@ -28,15 +28,6 @@ index 0b58a0f..ea9698c 100644
  }
  
  
-@@ -52,7 +53,7 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
-                        capture_output=True,
-                        cwd=priv_dir,
-                        check=True)
--        subprocess.run([npm, "install", "-E"] + [f"{name}@{version_spec}" for name, version_spec in EXACT_DEPS.items()],
-+        subprocess.run([npm, "install", "-E"] + [f"{name}#{version_spec}" for name, version_spec in EXACT_DEPS.items()],
-                        capture_output=True,
-                        cwd=priv_dir,
-                        check=True)
 @@ -72,6 +73,7 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
          objc = quick_tmp_dir / "objc.js"
          swift = quick_tmp_dir / "swift.js"
