@@ -157,7 +157,6 @@ jobs:
           sed -i 's/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g' ../patches/$name/*.patch
           sed -i 's/{SESSION_SERVICE}/${SESSION_SERVICE}/g' ../patches/$name/*.patch
           echo "$path"
-          cat ../patches/$name/all.patch
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
           git am ../../../patches/$name/*.patch

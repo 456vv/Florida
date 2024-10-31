@@ -1,18 +1,19 @@
-diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index ed84fc4..1efff27 100644
---- a/src/linux/frida-helper-backend.vala
-+++ b/src/linux/frida-helper-backend.vala
-@@ -3236,9 +3236,9 @@ namespace Frida {
- 			return fd;
- 		}
+diff --git a/src/frida-glue.c b/src/frida-glue.c
+index ee8f073..65deb86 100644
+--- a/src/frida-glue.c
++++ b/src/frida-glue.c
+@@ -38,9 +38,10 @@ frida_init_with_runtime (FridaRuntime rt)
  
- 		private int memfd_create (string name, uint flags) {
--			return Linux.syscall (SysCall.memfd_create, name, flags);
-+			return Linux.syscall (SysCall.memfd_create, "jit-cache", flags);
- 		}
- 	}
- 
- 	private void make_pty (out FileDescriptor read, out FileDescriptor write) throws Error {
+ #ifdef HAVE_GIOOPENSSL
+     g_io_module_openssl_register ();
+ #endif
+-
++	
++	g_set_prgname ("${FRIDA_PREFIX}");
+     if (runtime == FRIDA_RUNTIME_OTHER)
+     {
+       main_context = g_main_context_ref (g_main_context_default ());
+       main_loop = g_main_loop_new (main_context, FALSE);
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
 index 3695ba8..664bd19 100644
 --- a/lib/base/rpc.vala
@@ -229,22 +230,21 @@ index a2204a4..eac1611 100644
  			injectee_by_pid[pid] = id;
  
  			transport = t;
-diff --git a/src/frida-glue.c b/src/frida-glue.c
-index ee8f073..65deb86 100644
---- a/src/frida-glue.c
-+++ b/src/frida-glue.c
-@@ -38,9 +38,10 @@ frida_init_with_runtime (FridaRuntime rt)
+diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
+index ed84fc4..1efff27 100644
+--- a/src/linux/frida-helper-backend.vala
++++ b/src/linux/frida-helper-backend.vala
+@@ -3236,9 +3236,9 @@ namespace Frida {
+ 			return fd;
+ 		}
  
- #ifdef HAVE_GIOOPENSSL
-     g_io_module_openssl_register ();
- #endif
--
-+	
-+	g_set_prgname ("${FRIDA_PREFIX}");
-     if (runtime == FRIDA_RUNTIME_OTHER)
-     {
-       main_context = g_main_context_ref (g_main_context_default ());
-       main_loop = g_main_loop_new (main_context, FALSE);
+ 		private int memfd_create (string name, uint flags) {
+-			return Linux.syscall (SysCall.memfd_create, name, flags);
++			return Linux.syscall (SysCall.memfd_create, "jit-cache", flags);
+ 		}
+ 	}
+ 
+ 	private void make_pty (out FileDescriptor read, out FileDescriptor write) throws Error {
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
 index 50470ac..a3473d4 100644
 --- a/src/linux/linux-host-session.vala
@@ -341,10 +341,10 @@ index 03c219e..a7720c3 100644
  			}
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..0ee3e6a
+index 0000000..1c37f5a
 --- /dev/null
 +++ b/src/anti-anti-frida.py
-@@ -0,0 +1,34 @@
+@@ -0,0 +1,44 @@
 +import sys
 +import lief
 +import random
@@ -371,6 +371,16 @@ index 0000000..0ee3e6a
 +
 +        if "FRIDA" in symbol.name:
 +            symbol.name = symbol.name.replace("FRIDA", random_name)
++            
++		all_patch_string = ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]  # 字符串特征修改 尽量与源字符一样
++		for section in binary.sections:
++		   if section.name != ".rodata":
++		       continue
++		   for patch_str in all_patch_string:
++		       addr_all = section.search_all(patch_str)  # Patch 内存字符串
++		       for addr in addr_all:
++		           patch = [ord(n) for n in list(patch_str)[::-1]]
++		           binary.patch_address(section.file_offset + addr, patch)
 +
 +    binary.write(input_file)
 +
