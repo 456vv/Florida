@@ -148,7 +148,8 @@ jobs:
         FRIDA_PREFIX="$(head /dev/urandom -c 200 | tr -dc A-Za-z0-9 | head -c 5)"
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         
-        git clone --recurse-submodules https://github.com/frida/frida
+        FRIDA_VERSION=${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}
+        git clone --recurse-submodules --branch $FRIDA_VERSION https://github.com/frida/frida
         cd frida
         for path in ../patches/*
         do
@@ -159,7 +160,7 @@ jobs:
           echo "$path"
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
-          git am ../../../patches/$name/*.patch
+          git am  --show-current-patch=diff ../../../patches/$name/*.patch
           cd ../..
           echo $i
         done
