@@ -157,9 +157,9 @@ jobs:
         do
           name=$(basename $path)
           real=$(realpath $path)
-          sed -i "s/\{FRIDA_PREFIX\}/${FRIDA_PREFIX}/g" $path/*.patch
-          sed -i "s/\{SESSION_SERVICE\}/${SESSION_SERVICE}/g" $path/*.patch
-          sed -i "s/\{RANDOM_SEED\}/${RANDOM_SEED}/g" $path/*.patch
+          sed -i "s/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g" $path/*.patch
+          sed -i "s/{SESSION_SERVICE}/${SESSION_SERVICE}/g" $path/*.patch
+          sed -i "s/{RANDOM_SEED}/${RANDOM_SEED}/g" $path/*.patch
           echo "$path"
           echo "Apply patches in $real to frida/subprojects/$name"
           cd subprojects/$name
