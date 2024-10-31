@@ -150,7 +150,7 @@ jobs:
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
         echo "git clone --recurse-submodules -b ${FRIDA_VERSION} https://github.com/frida/frida"
-        git clone --recurse-submodules -b $FRIDA_VERSION https://github.com/frida/frida
+        git clone --recurse-submodules https://github.com/frida/frida -b "${FRIDA_VERSION}"
         cd frida
         for path in ../patches/*
         do
