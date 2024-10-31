@@ -146,7 +146,7 @@ jobs:
         echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
-        FRIDA_PREFIX="$(head /dev/urandom -c 200 | tr -dc A-Za-z0-9 | head -c 5)"
+        FRIDA_PREFIX="$(head /dev/urandom -c 100 | tr -dc a-z | head -c 5)"
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         RANDOM_SEED=$(echo "$FRIDA_VERSION" | sed 's/[v\.]//g')
         
