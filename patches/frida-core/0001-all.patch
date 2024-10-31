@@ -1,6 +1,6 @@
-From fad70ccc9757d46c64053d9ed1ff6d1ccb4916e9 Mon Sep 17 00:00:00 2001
+From 09652189c0885f07bcaaf771e401d546efd850d6 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 12:23:47 +0800
+Date: Thu, 31 Oct 2024 12:48:34 +0800
 Subject: [PATCH] all
 
 ---
@@ -58,7 +58,7 @@ index 73e0c01..a3db111 100644
  
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..134cda2
+index 0000000..52dec88
 --- /dev/null
 +++ b/src/anti-anti-frida.py
 @@ -0,0 +1,58 @@
@@ -93,7 +93,7 @@ index 0000000..134cda2
 +        if "FRIDA" in symbol.name:
 +            symbol.name = symbol.name.replace("FRIDA", random_name)
 +
-+        for section in binary.sections
++        for section in binary.sections:
 +            if section.name == ".text":
 +                for addr in section.search_all("frida:rpc"):#过滤frida:rpc
 +                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name+":rpc"])
@@ -147,7 +147,7 @@ index ddc56cc..c3464e7 100644
  						default:
  							var length = parse_length (command_or_length);
 diff --git a/src/embed-agent.py b/src/embed-agent.py
-index 1cdd46d..28ff509 100644
+index 1cdd46d..a7115a4 100644
 --- a/src/embed-agent.py
 +++ b/src/embed-agent.py
 @@ -3,7 +3,10 @@ import shutil
@@ -198,7 +198,7 @@ index 1cdd46d..28ff509 100644
 +                if "FRIDA" in symbol.name:
 +                    symbol.name = symbol.name.replace("FRIDA", frida_name)
 +
-+                for section in binary.sections
++                for section in binary.sections:
 +                    if section.name == ".text":
 +                        for addr in section.search_all("frida:rpc"):#过滤frida:rpc
 +                            binary.patch_address(section.file_offset+addr, [ord(n) for n in frida_name+":rpc"])
