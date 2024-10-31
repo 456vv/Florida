@@ -148,7 +148,7 @@ jobs:
         FRIDA_PREFIX="$(head /dev/urandom -c 200 | tr -dc A-Za-z0-9 | head -c 5)"
         SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         
-        FRIDA_VERSION=${{ steps.pullFridaLatestRelease.outputs.FRIDA_VERSION }}
+        FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
         git clone --recurse-submodules --branch $FRIDA_VERSION https://github.com/frida/frida
         cd frida
         for path in ../patches/*
@@ -327,7 +327,7 @@ jobs:
         asset_path: '${{ github.workspace }}/build-android-arm64/subprojects/frida-core/lib/gadget/frida-gadget.so.gz'
         asset_name: 'florida-gadget-${{ needs.check_version.outputs.FRIDA_VERSION }}-android-arm64.so.gz'
         asset_content_type: application/octet-stream
-   
+
     - name: Upload android x86 frida-gadget for Florida
       uses: actions/upload-release-asset@v1.0.2
       env:
