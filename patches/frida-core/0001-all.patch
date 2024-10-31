@@ -1,12 +1,12 @@
-From e9d1062e09fe5ebeb6843039d0f9307e4f8cba24 Mon Sep 17 00:00:00 2001
+From 42b634e1ad7186696d088b99ec4f6991f41b85c8 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 13:33:43 +0800
+Date: Thu, 31 Oct 2024 16:43:28 +0800
 Subject: [PATCH] all
 
 ---
  server/server.vala                    |  3 +-
  src/agent-container.vala              |  2 +-
- src/anti-anti-frida.py                | 58 +++++++++++++++++++++++++++
+ src/anti-anti-frida.py                | 56 +++++++++++++++++++++++++++
  src/darwin/darwin-host-session.vala   |  2 +-
  src/droidy/droidy-client.vala         |  2 +-
  src/freebsd/binjector-glue.c          |  2 +-
@@ -18,7 +18,7 @@ Subject: [PATCH] all
  src/windows/windows-host-session.vala |  2 +-
  tests/test-agent.vala                 |  2 +-
  tests/test-injector.vala              |  2 +-
- 14 files changed, 76 insertions(+), 15 deletions(-)
+ 14 files changed, 74 insertions(+), 15 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/server/server.vala b/server/server.vala
@@ -57,10 +57,10 @@ index 73e0c01..a3db111 100644
  
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..52dec88
+index 0000000..6ecf333
 --- /dev/null
 +++ b/src/anti-anti-frida.py
-@@ -0,0 +1,58 @@
+@@ -0,0 +1,56 @@
 +import sys
 +import lief
 +import random
@@ -92,29 +92,27 @@ index 0000000..52dec88
 +        if "FRIDA" in symbol.name:
 +            symbol.name = symbol.name.replace("FRIDA", random_name)
 +
-+        for section in binary.sections:
-+            if section.name == ".text":
-+                for addr in section.search_all("frida:rpc"):#过滤frida:rpc
-+                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name+":rpc"])
-+                for patch_str in []: #放入 .text 节的相关过滤字符串
-+                    for addr in section.search_all(patch_str):
-+                        random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
-+                        binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
-+                continue
-+            if section.name == ".rodata":
-+                for patch_str in []: #放入 .rodata 节的相关过滤字符串
-+                    for addr in section.search_all(patch_str):
-+                        random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
-+                        binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
-+                continue
-+            if section.name != ".rodata":
-+                for patch_str in ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]:
-+                   for addr in section.search_all(patch_str):
-+                       binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
++    for section in binary.sections:
++        if section.name == ".text":
++            for patch_str in []: #放入 .text 节的相关过滤字符串
++                for addr in section.search_all(patch_str):
++                    random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
++            continue
++        if section.name == ".rodata":
++            for patch_str in []: #放入 .rodata 节的相关过滤字符串
++                for addr in section.search_all(patch_str):
++                    random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
++            continue
++        if section.name != ".rodata":
++            for patch_str in ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]:
++               for addr in section.search_all(patch_str):
++                   binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
 +
 +    binary.write(input_file)
 +
-+    for i in ["gum-js-loop", "gmain", "gdbus"]:
++    for i in ["LIBFRIDA","gum-js-loop", "gmain", "gdbus"]:
 +        random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
