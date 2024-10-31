@@ -1,6 +1,6 @@
-From 9c96c1ac53bf19dfa9050066e2625a3802fc0343 Mon Sep 17 00:00:00 2001
+From c12312a346756bb90f2a204272882980d22d828d Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 13:03:12 +0800
+Date: Thu, 31 Oct 2024 13:11:48 +0800
 Subject: [PATCH] all
 
 ---
@@ -147,7 +147,7 @@ index ddc56cc..c3464e7 100644
  						default:
  							var length = parse_length (command_or_length);
 diff --git a/src/embed-agent.py b/src/embed-agent.py
-index 1cdd46d..6ee90a1 100644
+index 1cdd46d..51dcc98 100644
 --- a/src/embed-agent.py
 +++ b/src/embed-agent.py
 @@ -3,7 +3,10 @@ import shutil
@@ -215,7 +215,7 @@ index 1cdd46d..6ee90a1 100644
 +                           for addr in section.search_all(patch_str):
 +                               binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
 +
-+            binary.write(embedded_agent)
++            binary.write(f"{embedded_agent}")
 +
 +            for i in ["gum-js-loop", "gmain", "gdbus"]:
 +                random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
