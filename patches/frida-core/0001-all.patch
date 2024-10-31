@@ -1,26 +1,26 @@
-From dc43360e817e6354581a069c7767588033c57346 Mon Sep 17 00:00:00 2001
+From 0b4a1566a4a6b9571497e10e0ba712a321135a87 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 08:30:19 +0800
+Date: Thu, 31 Oct 2024 12:11:37 +0800
 Subject: [PATCH] all
 
 ---
- lib/base/rpc.vala                     | 15 +++++++--
+ lib/base/rpc.vala                     | 15 +++++--
  server/server.vala                    |  3 +-
  src/agent-container.vala              |  2 +-
- src/anti-anti-frida.py                | 44 +++++++++++++++++++++++++++
+ src/anti-anti-frida.py                | 58 +++++++++++++++++++++++++++
  src/darwin/darwin-host-session.vala   |  2 +-
  src/droidy/droidy-client.vala         |  2 +-
- src/embed-agent.py                    | 43 +++++++++++++++++++++++++-
+ src/embed-agent.py                    | 56 +++++++++++++++++++++++++-
  src/freebsd/binjector-glue.c          |  2 +-
  src/freebsd/freebsd-host-session.vala |  2 +-
  src/frida-glue.c                      |  1 +
  src/linux/frida-helper-backend.vala   |  2 +-
- src/linux/linux-host-session.vala     |  9 +++---
+ src/linux/linux-host-session.vala     |  9 +++--
  src/qnx/qnx-host-session.vala         |  2 +-
  src/windows/windows-host-session.vala |  2 +-
  tests/test-agent.vala                 |  2 +-
  tests/test-injector.vala              |  2 +-
- 16 files changed, 116 insertions(+), 19 deletions(-)
+ 16 files changed, 142 insertions(+), 20 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
@@ -105,10 +105,10 @@ index 73e0c01..a3db111 100644
  
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..9fa0d9b
+index 0000000..a9acefe
 --- /dev/null
 +++ b/src/anti-anti-frida.py
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,58 @@
 +import sys
 +import lief
 +import random
@@ -118,12 +118,16 @@ index 0000000..9fa0d9b
 +if __name__ == "__main__":
 +    input_file = sys.argv[1]
 +    print(f"[*] Patch frida-agent: {input_file}")
-+    random_name = "".join(random.sample("ABCDEFGHIJKLMNO", 5))
++
++    print(f"[*] random.seed({RANDOM_SEED})")
++    random.seed({RANDOM_SEED})
++    random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, 5))
 +    print(f"[*] Patch `frida` to `{random_name}``")
 +
 +    binary = lief.parse(input_file)
 +
 +    if not binary:
++        print(f"file does not exist {input_file}")
 +        exit()
 +
 +    for symbol in binary.symbols:
@@ -136,15 +140,25 @@ index 0000000..9fa0d9b
 +        if "FRIDA" in symbol.name:
 +            symbol.name = symbol.name.replace("FRIDA", random_name)
 +
-+		all_patch_string = ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]  # 字符串特征修改 尽量与源字符一样
-+		for section in binary.sections:
-+		   if section.name != ".rodata":
-+		       continue
-+		   for patch_str in all_patch_string:
-+		       addr_all = section.search_all(patch_str)  # Patch 内存字符串
-+		       for addr in addr_all:
-+		           patch = [ord(n) for n in list(patch_str)[::-1]]
-+		           binary.patch_address(section.file_offset + addr, patch)
++        for section in binary.sections
++            if section.name == ".text":
++                for addr in section.search_all("frida:rpc"):#过滤frida:rpc
++                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name+":rpc"])
++                for patch_str in []: #放入 .text 节的相关过滤字符串
++                    for addr in section.search_all(patch_str):
++                        random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                        binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
++                continue
++            if section.name == ".rodata":
++                for patch_str in []: #放入 .rodata 节的相关过滤字符串
++                    for addr in section.search_all(patch_str):
++                        random_name_ = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                        binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
++                continue
++            if section.name != ".rodata":
++                for patch_str in ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]:
++                   for addr in section.search_all(patch_str):
++                       binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
 +
 +    binary.write(input_file)
 +
@@ -180,10 +194,10 @@ index ddc56cc..c3464e7 100644
  						default:
  							var length = parse_length (command_or_length);
 diff --git a/src/embed-agent.py b/src/embed-agent.py
-index 1cdd46d..126e17e 100644
+index 1cdd46d..2284926 100644
 --- a/src/embed-agent.py
 +++ b/src/embed-agent.py
-@@ -3,7 +3,9 @@ import shutil
+@@ -3,7 +3,10 @@ import shutil
  import subprocess
  import sys
  import struct
@@ -191,51 +205,72 @@ index 1cdd46d..126e17e 100644
 +import random
 +import lief
 +import os
++import string
  
  def main(argv):
      args = argv[1:]
-@@ -78,6 +80,45 @@ def main(argv):
+@@ -69,15 +72,64 @@ def main(argv):
+             shutil.copy(agent_legacy, embedded_agent)
+         embedded_assets += [embedded_agent]
+     elif host_os in {"linux", "android"}:
++
++        print(f"[*] random.seed({RANDOM_SEED})")
++        random.seed({RANDOM_SEED})
++        frida_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, 5))
++
+         for agent, flavor in [(agent_modern, "64"),
+                               (agent_legacy, "32"),
+                               (agent_emulated_modern, "arm64"),
+                               (agent_emulated_legacy, "arm")]:
+-            embedded_agent = priv_dir / f"frida-agent-{flavor}.so"
++            embedded_agent = priv_dir / f"{frida_name}-agent-{flavor}.so"
+             if agent is not None:
                  shutil.copy(agent, embedded_agent)
              else:
                  embedded_agent.write_bytes(b"")
 +
-+            random_charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-+            random_name = "".join(random.sample(random_charset, 5))
 +            binary = lief.parse(embedded_agent)
++
++            if not binary:
++                print(f"file does not exist {embedded_agent}")
++                continue
 +
 +            for symbol in binary.symbols:
 +                if symbol.name == "frida_agent_main":
 +                    symbol.name = "main"
 +
 +                if "frida" in symbol.name:
-+                    symbol.name = symbol.name.replace("frida", random_name)
++                    symbol.name = symbol.name.replace("frida", frida_name)
 +
 +                if "FRIDA" in symbol.name:
-+                    symbol.name = symbol.name.replace("FRIDA", random_name)
++                    symbol.name = symbol.name.replace("FRIDA", frida_name)
 +
-+            all_patch_string = ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]  # 字符串特征修改 尽量与源字符一样
-+            for section in binary.sections:
-+               if section.name != ".rodata":
-+                   continue
-+               for patch_str in all_patch_string:
-+                   addr_all = section.search_all(patch_str)  # Patch 内存字符串
-+                   for addr in addr_all:
-+                       patch = [ord(n) for n in list(patch_str)[::-1]]
-+                       binary.patch_address(section.file_offset + addr, patch)
++                for section in binary.sections
++                    if section.name == ".text":
++                        for addr in section.search_all("frida:rpc"):#过滤frida:rpc
++                            binary.patch_address(section.file_offset+addr, [ord(n) for n in frida_name+":rpc"])
++                        for patch_str in []: #放入 .text 节的相关过滤字符串
++                            for addr in section.search_all(patch_str):
++                                random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                                binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name])
++                        continue
++                    if section.name == ".rodata":
++                        for patch_str in []: #放入 .rodata 节的相关过滤字符串
++                            for addr in section.search_all(patch_str):
++                                random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(patch_str)))
++                                binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name])
++                        continue
++                    if section.name != ".rodata":
++                        for patch_str in ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]:
++                           for addr in section.search_all(patch_str):
++                               binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
 +
-+            # gum-js-loop thread
-+            random_name = "".join(random.sample(random_charset, 11))
-+            print(f"[*] Patch `gum-js-loop` to `{random_name}`")
-+            os.system(f"sed -b -i s/gum-js-loop/{random_name}/g {embedded_agent}")
++            binary.write(embedded_agent)
 +
-+            # gmain thread
-+            random_name = "".join(random.sample(random_charset, 5))
-+            print(f"[*] Patch `gmain` to `{random_name}`")
-+            os.system(f"sed -b -i s/gmain/{random_name}/g {embedded_agent}")
-+
-+            # thread_gdbus
-+            random_name = "".join(random.sample(random_charset, 5))
-+            os.system(f"sed -b -i s/gdbus/{random_name}/g {embedded_agent}")
++            for i in ["gum-js-loop", "gmain", "gdbus"]:
++                random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
++                print(f"[*] Patch `{i}` to `{random_name}`")
++                os.system(f"sed -b -i s/{i}/{random_name}/g {embedded_agent}")
 +
              embedded_assets += [embedded_agent]
      elif host_os in {"freebsd", "qnx"}:
