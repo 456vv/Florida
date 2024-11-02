@@ -1,17 +1,15 @@
-From 378e385fe0fb07b0bf2c6f052a60c840b009f461 Mon Sep 17 00:00:00 2001
+From f341872a0942a456591d88da070b4da3e79e73df Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sat, 2 Nov 2024 15:21:43 +0800
+Date: Sat, 2 Nov 2024 17:10:24 +0800
 Subject: [PATCH] all
 
 ---
  server/server.vala                  |  3 +-
  src/anti-anti-frida.py              | 56 +++++++++++++++++++++++++++++
  src/droidy/droidy-client.vala       |  2 +-
- src/freebsd/binjector-glue.c        |  2 +-
  src/frida-glue.c                    |  1 +
  src/linux/frida-helper-backend.vala |  2 +-
- src/linux/linux-host-session.vala   |  7 ++--
- 7 files changed, 66 insertions(+), 7 deletions(-)
+ 5 files changed, 61 insertions(+), 3 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/server/server.vala b/server/server.vala
@@ -37,7 +35,7 @@ index 525c145..97d0905 100644
  #if DARWIN
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..8abb501
+index 0000000..78cbf08
 --- /dev/null
 +++ b/src/anti-anti-frida.py
 @@ -0,0 +1,56 @@
@@ -92,7 +90,7 @@ index 0000000..8abb501
 +
 +    binary.write(input_file)
 +
-+    for i in ["gum-js-loop", "gmain", "gdbus"]:
++    for i in []: # 相关字符："gum-js-loop", "gmain", "gdbus"
 +        random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
@@ -110,19 +108,6 @@ index ddc56cc..c3464e7 100644
  
  						default:
  							var length = parse_length (command_or_length);
-diff --git a/src/freebsd/binjector-glue.c b/src/freebsd/binjector-glue.c
-index 2bdce0a..02d9b57 100644
---- a/src/freebsd/binjector-glue.c
-+++ b/src/freebsd/binjector-glue.c
-@@ -805,7 +805,7 @@ frida_inject_instance_init_fifo (FridaInjectInstance * self)
- {
-   const int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
- 
--  self->fifo_path = g_strdup_printf ("%s/binjector-%u", self->temp_path, self->id);
-+  self->fifo_path = g_strdup_printf ("%s/%p-%u", self->temp_path, self, self->id);
- 
-   mkfifo (self->fifo_path, mode);
-   chmod (self->fifo_path, mode);
 diff --git a/src/frida-glue.c b/src/frida-glue.c
 index ee8f073..678829a 100644
 --- a/src/frida-glue.c
@@ -148,27 +133,6 @@ index ed84fc4..1efff27 100644
  		}
  	}
  
-diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
-index 50470ac..6424579 100644
---- a/src/linux/linux-host-session.vala
-+++ b/src/linux/linux-host-session.vala
-@@ -128,12 +128,13 @@ namespace Frida {
- 			var blob64 = Frida.Data.Agent.get_frida_agent_64_so_blob ();
- 			var emulated_arm = Frida.Data.Agent.get_frida_agent_arm_so_blob ();
- 			var emulated_arm64 = Frida.Data.Agent.get_frida_agent_arm64_so_blob ();
--			agent = new AgentDescriptor (PathTemplate ("frida-agent-<arch>.so"),
-+			var random_prefix = GLib.Uuid.string_random();
-+			agent = new AgentDescriptor (PathTemplate (random_prefix + "-<arch>.so"),
- 				new Bytes.static (blob32.data),
- 				new Bytes.static (blob64.data),
- 				new AgentResource[] {
--					new AgentResource ("frida-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
--					new AgentResource ("frida-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
-+					new AgentResource (random_prefix + "-arm.so", new Bytes.static (emulated_arm.data), tempdir),
-+					new AgentResource (random_prefix + "-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
- 				},
- 				AgentMode.INSTANCED,
- 				tempdir);
 -- 
 2.47.0.windows.2
 
