@@ -1,6 +1,6 @@
-From fc2ee59320aace0e34e8460eda46c53053fb93ea Mon Sep 17 00:00:00 2001
+From 378e385fe0fb07b0bf2c6f052a60c840b009f461 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 31 Oct 2024 22:11:56 +0800
+Date: Sat, 2 Nov 2024 15:21:43 +0800
 Subject: [PATCH] all
 
 ---
@@ -37,7 +37,7 @@ index 525c145..97d0905 100644
  #if DARWIN
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
-index 0000000..573527f
+index 0000000..8abb501
 --- /dev/null
 +++ b/src/anti-anti-frida.py
 @@ -0,0 +1,56 @@
@@ -64,13 +64,13 @@ index 0000000..573527f
 +
 +    for symbol in binary.symbols:
 +        if symbol.name == "frida_agent_main":
-+            symbol.name = "{FRIDA_PREFIX}_agent_main"
++            #symbol.name = "{FRIDA_PREFIX}_agent_main"
 +
 +        if "frida" in symbol.name:
-+            symbol.name = symbol.name.replace("frida", random_name)
++            #symbol.name = symbol.name.replace("frida", random_name)
 +
 +        if "FRIDA" in symbol.name:
-+            symbol.name = symbol.name.replace("FRIDA", random_name)
++            #symbol.name = symbol.name.replace("FRIDA", random_name)
 +
 +    for section in binary.sections:
 +        if section.name == ".text":
@@ -86,13 +86,13 @@ index 0000000..573527f
 +                    binary.patch_address(section.file_offset+addr, [ord(n) for n in random_name_])
 +            continue
 +        if section.name != ".rodata":
-+            for patch_str in ["FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"]:
++            for patch_str in []:# 放入非 .rodata 节的相关过滤字符串，如： "FridaScriptEngine", "GLib-GIO", "GDBusProxy", "GumScript"
 +               for addr in section.search_all(patch_str):
 +                   binary.patch_address(section.file_offset + addr, [ord(n) for n in list(patch_str)[::-1]])
 +
 +    binary.write(input_file)
 +
-+    for i in ["LIBFRIDA","gum-js-loop", "gmain", "gdbus"]:
++    for i in ["gum-js-loop", "gmain", "gdbus"]:
 +        random_name = "".join(random.sample(string.ascii_lowercase+string.ascii_uppercase, len(i)))
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
