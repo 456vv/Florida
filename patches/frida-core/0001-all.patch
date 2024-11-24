@@ -1,36 +1,38 @@
-From bb83a510104122574bfd8dd88ddbb67aec441c06 Mon Sep 17 00:00:00 2001
+From 89b94233c531649948108bd9e46f87445bd1038a Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sun, 24 Nov 2024 17:30:18 +0800
+Date: Sun, 24 Nov 2024 22:44:11 +0800
 Subject: [PATCH] all
 
 ---
- lib/agent/agent.vala                  |  8 ++--
- lib/base/p2p.vala                     |  2 +-
- lib/base/rpc.vala                     |  6 +--
- lib/base/session.vala                 |  4 +-
- lib/base/socket.vala                  | 10 ++---
- lib/gadget/gadget-glue.c              |  2 +-
- lib/gadget/gadget.vala                |  8 ++--
- lib/pipe/pipe.vala                    |  2 +-
- lib/selinux/patch.c                   | 10 ++---
- meson.build                           |  2 +-
- server/server.vala                    |  5 ++-
- src/agent-container.vala              |  4 +-
- src/anti-anti-frida.py                | 56 +++++++++++++++++++++++++++
- src/darwin/darwin-host-session.vala   |  2 +-
- src/darwin/frida-helper-service.vala  |  2 +-
- src/droidy/droidy-client.vala         |  2 +-
- src/droidy/injector.vala              |  2 +-
- src/freebsd/freebsd-host-session.vala |  2 +-
- src/frida-glue.c                      |  3 +-
- src/frida.vala                        |  2 +-
- src/linux/frida-helper-backend.vala   |  4 +-
- src/linux/frida-helper-process.vala   |  4 +-
- src/linux/linjector.vala              |  6 +--
- src/linux/linux-host-session.vala     |  8 ++--
- src/qnx/qnx-host-session.vala         |  2 +-
- src/windows/windows-host-session.vala |  2 +-
- 26 files changed, 109 insertions(+), 51 deletions(-)
+ lib/agent/agent.vala                          |  8 +--
+ lib/base/p2p-glue.c                           |  2 +-
+ lib/base/p2p.vala                             |  2 +-
+ lib/base/rpc.vala                             |  6 +-
+ lib/base/session.vala                         |  4 +-
+ lib/base/socket.vala                          | 14 ++---
+ lib/gadget/gadget-glue.c                      |  2 +-
+ lib/gadget/gadget.vala                        |  8 +--
+ lib/pipe/pipe.vala                            |  2 +-
+ lib/selinux/patch.c                           | 10 ++--
+ meson.build                                   |  2 +-
+ server/server.vala                            |  5 +-
+ src/agent-container.vala                      |  4 +-
+ src/anti-anti-frida.py                        | 56 +++++++++++++++++++
+ .../script-runtime/message-dispatcher.ts      |  6 +-
+ src/darwin/darwin-host-session.vala           |  2 +-
+ src/darwin/frida-helper-service.vala          |  2 +-
+ src/droidy/droidy-client.vala                 |  2 +-
+ src/droidy/injector.vala                      |  2 +-
+ src/freebsd/freebsd-host-session.vala         |  2 +-
+ src/frida-glue.c                              |  3 +-
+ src/frida.vala                                |  2 +-
+ src/linux/frida-helper-backend.vala           |  4 +-
+ src/linux/frida-helper-process.vala           |  4 +-
+ src/linux/linjector.vala                      |  6 +-
+ src/linux/linux-host-session.vala             |  8 +--
+ src/qnx/qnx-host-session.vala                 |  2 +-
+ src/windows/windows-host-session.vala         |  2 +-
+ 28 files changed, 115 insertions(+), 57 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -73,6 +75,19 @@ index 1c5b1b4..df0a280 100644
  
  				var connection = yield new DBusConnection (stream, ServerGuid.HOST_SESSION_SERVICE,
  					AUTHENTICATION_SERVER | AUTHENTICATION_ALLOW_ANONYMOUS, null, cancellable);
+diff --git a/lib/base/p2p-glue.c b/lib/base/p2p-glue.c
+index f37ac14..96e07e1 100644
+--- a/lib/base/p2p-glue.c
++++ b/lib/base/p2p-glue.c
+@@ -41,7 +41,7 @@ _frida_generate_certificate (guint8 ** cert_der, gint * cert_der_length, gchar *
+ 
+   name = X509_get_subject_name (x509);
+   X509_NAME_add_entry_by_txt (name, "C", MBSTRING_ASC, (const unsigned char *) "CA", -1, -1, 0);
+-  X509_NAME_add_entry_by_txt (name, "O", MBSTRING_ASC, (const unsigned char *) "Frida", -1, -1, 0);
++  X509_NAME_add_entry_by_txt (name, "O", MBSTRING_ASC, (const unsigned char *) "{FRIDA_PREFIX_U}", -1, -1, 0);
+   X509_NAME_add_entry_by_txt (name, "CN", MBSTRING_ASC, (const unsigned char *) "lolcathost", -1, -1, 0);
+   X509_set_issuer_name (x509, name);
+ 
 diff --git a/lib/base/p2p.vala b/lib/base/p2p.vala
 index 449eb94..d4ad4f0 100644
 --- a/lib/base/p2p.vala
@@ -118,7 +133,7 @@ index 3695ba8..4c76d5e 100644
  
  			var request_id_value = rpc_message.get_element (1);
 diff --git a/lib/base/session.vala b/lib/base/session.vala
-index b9e56da..46605b8 100644
+index b9e56da..3ce9b78 100644
 --- a/lib/base/session.vala
 +++ b/lib/base/session.vala
 @@ -299,7 +299,7 @@ namespace Frida {
@@ -140,11 +155,15 @@ index b9e56da..46605b8 100644
  
  	namespace ObjectPath {
 diff --git a/lib/base/socket.vala b/lib/base/socket.vala
-index 07b6ab0..5e54e3b 100644
+index 07b6ab0..ac6de37 100644
 --- a/lib/base/socket.vala
 +++ b/lib/base/socket.vala
-@@ -3,11 +3,11 @@ namespace Frida {
- 	public const uint16 DEFAULT_CLUSTER_PORT = 27052;
+@@ -1,13 +1,13 @@
+ namespace Frida {
+-	public const uint16 DEFAULT_CONTROL_PORT = 27042;
+-	public const uint16 DEFAULT_CLUSTER_PORT = 27052;
++	public const uint16 DEFAULT_CONTROL_PORT = 27142;
++	public const uint16 DEFAULT_CLUSTER_PORT = 27152;
  
  	public SocketConnectable parse_control_address (string? address, uint16 port = 0) throws Error {
 -		return parse_socket_address (address, port, "127.0.0.1", DEFAULT_CONTROL_PORT);
@@ -404,6 +423,31 @@ index 0000000..b642624
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
 +        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
+diff --git a/src/barebone/script-runtime/message-dispatcher.ts b/src/barebone/script-runtime/message-dispatcher.ts
+index 13b3ba1..4742a3a 100644
+--- a/src/barebone/script-runtime/message-dispatcher.ts
++++ b/src/barebone/script-runtime/message-dispatcher.ts
+@@ -3,7 +3,7 @@ export class MessageDispatcher {
+     #operations = new Map<string, MessageHandler[]>();
+ 
+     dispatch(message: any, data: ArrayBuffer | null) {
+-        if (message instanceof Array && message[0] === "frida:rpc") {
++        if (message instanceof Array && message[0] === "{FRIDA_PREFIX}:rpc") {
+             this.#handleRpcMessage(message[1], message[2], message.slice(3));
+         } else {
+             this.#messages.push([message, data]);
+@@ -63,9 +63,9 @@ export class MessageDispatcher {
+ 
+     #reply(id: number, type: RpcMessageType, result: any, params: any[] = []) {
+         if (result instanceof ArrayBuffer)
+-            send(["frida:rpc", id, type, {}].concat(params), result);
++            send(["{FRIDA_PREFIX}:rpc", id, type, {}].concat(params), result);
+         else
+-            send(["frida:rpc", id, type, result].concat(params));
++            send(["{FRIDA_PREFIX}:rpc", id, type, result].concat(params));
+     }
+ 
+     #dispatchMessages() {
 diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
 index ab9b290..99e3ef8 100644
 --- a/src/darwin/darwin-host-session.vala
