@@ -1,6 +1,6 @@
-From 1457c5b923da25701cad9d9f592e2f45855e2f1c Mon Sep 17 00:00:00 2001
+From 096d54b261f5bc14b479dd978bae8602f7d96d9b Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sun, 24 Nov 2024 17:30:55 +0800
+Date: Sun, 24 Nov 2024 17:48:08 +0800
 Subject: [PATCH] all
 
 ---
@@ -12,12 +12,11 @@ Subject: [PATCH] all
  gum/backend-qnx/gumprocess-qnx.c         | 11 ---
  gum/backend-windows/gumprocess-windows.c | 89 +++++++-----------------
  gum/gum.c                                |  2 +-
- gum/gumprocess.h                         |  1 -
  meson.build                              |  2 +-
- 10 files changed, 36 insertions(+), 154 deletions(-)
+ 9 files changed, 36 insertions(+), 153 deletions(-)
 
 diff --git a/bindings/gumjs/gumscriptscheduler.c b/bindings/gumjs/gumscriptscheduler.c
-index b86a6c5..7058c1e 100644
+index b86a6c5..cc8c726 100644
 --- a/bindings/gumjs/gumscriptscheduler.c
 +++ b/bindings/gumjs/gumscriptscheduler.c
 @@ -114,7 +114,7 @@ gum_script_scheduler_start (GumScriptScheduler * self)
@@ -25,7 +24,7 @@ index b86a6c5..7058c1e 100644
      self->js_loop = g_main_loop_new (self->js_context, TRUE);
  
 -    self->js_thread = g_thread_new ("gum-js-loop",
-+    self->js_thread = g_thread_new ("banana-js-loop",
++    self->js_thread = g_thread_new ("{FRIDA_PREFIX}-js-loop",
          (GThreadFunc) gum_script_scheduler_run_js_loop, self);
    }
  }
@@ -397,18 +396,6 @@ index 239c70d..cd43aa7 100644
  
  #if defined (HAVE_LINUX) && defined (HAVE_GLIBC)
    gum_libdl_prevent_unload ();
-diff --git a/gum/gumprocess.h b/gum/gumprocess.h
-index 38be74f..946df8c 100644
---- a/gum/gumprocess.h
-+++ b/gum/gumprocess.h
-@@ -61,7 +61,6 @@ typedef enum {
- struct _GumThreadDetails
- {
-   GumThreadId id;
--  const gchar * name;
-   GumThreadState state;
-   GumCpuContext cpu_context;
- };
 diff --git a/meson.build b/meson.build
 index a0907b6..cc16eab 100644
 --- a/meson.build
