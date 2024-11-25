@@ -1,6 +1,6 @@
-From d517f9b5545c061f3582071c7c583e4f8846b40c Mon Sep 17 00:00:00 2001
+From 2c35aae1b9711bd8017e44a447a1afe6c2ef3672 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Mon, 25 Nov 2024 19:53:48 +0800
+Date: Mon, 25 Nov 2024 22:11:26 +0800
 Subject: [PATCH] all
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] all
  lib/base/p2p-glue.c                           |  2 +-
  lib/base/p2p.vala                             |  2 +-
  lib/base/rpc.vala                             |  6 +-
- lib/base/session.vala                         |  4 +-
+ lib/base/session.vala                         |  2 +-
  lib/base/socket.vala                          | 14 ++---
  lib/gadget/gadget-glue.c                      |  2 +-
  lib/gadget/gadget.vala                        |  4 +-
@@ -34,7 +34,7 @@ Subject: [PATCH] all
  src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/frida-helper-process.vala         |  2 +-
  src/windows/windows-host-session.vala         |  2 +-
- 30 files changed, 115 insertions(+), 57 deletions(-)
+ 30 files changed, 114 insertions(+), 56 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -135,7 +135,7 @@ index 8990b70..dadc268 100644
  
  			var request_id_value = rpc_message.get_element (1);
 diff --git a/lib/base/session.vala b/lib/base/session.vala
-index b9e56da..b5ca09a 100644
+index b9e56da..140e3bc 100644
 --- a/lib/base/session.vala
 +++ b/lib/base/session.vala
 @@ -299,7 +299,7 @@ namespace Frida {
@@ -147,15 +147,6 @@ index b9e56da..b5ca09a 100644
  			agent.controlling_mode = false;
  			agent.ice_tcp = false;
  
-@@ -2039,7 +2039,7 @@ namespace Frida {
- #endif
- 
- 	namespace ServerGuid {
--		public const string HOST_SESSION_SERVICE = "6769746875622e636f6d2f6672696461";
-+		public const string HOST_SESSION_SERVICE = "{FRIDA_ROMDON_32}";
- 	}
- 
- 	namespace ObjectPath {
 diff --git a/lib/base/socket.vala b/lib/base/socket.vala
 index 07b6ab0..ac6de37 100644
 --- a/lib/base/socket.vala
