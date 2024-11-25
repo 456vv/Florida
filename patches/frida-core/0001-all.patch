@@ -1,6 +1,6 @@
-From 89b94233c531649948108bd9e46f87445bd1038a Mon Sep 17 00:00:00 2001
+From d95c37316e2972233e33e460a3451cf285f5ea0f Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sun, 24 Nov 2024 22:44:11 +0800
+Date: Mon, 25 Nov 2024 09:41:31 +0800
 Subject: [PATCH] all
 
 ---
@@ -102,7 +102,7 @@ index 449eb94..d4ad4f0 100644
  			string local_cert_pem;
  			string local_key_pem;
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
-index 3695ba8..4c76d5e 100644
+index 3695ba8..6972263 100644
 --- a/lib/base/rpc.vala
 +++ b/lib/base/rpc.vala
 @@ -17,7 +17,7 @@ namespace Frida {
@@ -110,7 +110,7 @@ index 3695ba8..4c76d5e 100644
  			request
  				.begin_array ()
 -				.add_string_value ("frida:rpc")
-+				.add_string_value ("{FRIDA_PREFIX}:rpc")
++				.add_string_value ("{FRIDA_ROMDON_9}")
  				.add_string_value (request_id)
  				.add_string_value ("call")
  				.add_string_value (method)
@@ -119,7 +119,7 @@ index 3695ba8..4c76d5e 100644
  
  		public bool try_handle_message (string json) {
 -			if (json.index_of ("\"frida:rpc\"") == -1)
-+			if (json.index_of ("\"{FRIDA_PREFIX}:rpc\"") == -1)
++			if (json.index_of ("\"{FRIDA_ROMDON_9}\"") == -1)
  				return false;
  
  			var parser = new Json.Parser ();
@@ -128,12 +128,12 @@ index 3695ba8..4c76d5e 100644
  
  			string? type = rpc_message.get_element (0).get_string ();
 -			if (type == null || type != "frida:rpc")
-+			if (type == null || type != "{FRIDA_PREFIX}:rpc")
++			if (type == null || type != "{FRIDA_ROMDON_9}")
  				return false;
  
  			var request_id_value = rpc_message.get_element (1);
 diff --git a/lib/base/session.vala b/lib/base/session.vala
-index b9e56da..3ce9b78 100644
+index b9e56da..b5ca09a 100644
 --- a/lib/base/session.vala
 +++ b/lib/base/session.vala
 @@ -299,7 +299,7 @@ namespace Frida {
@@ -150,7 +150,7 @@ index b9e56da..3ce9b78 100644
  
  	namespace ServerGuid {
 -		public const string HOST_SESSION_SERVICE = "6769746875622e636f6d2f6672696461";
-+		public const string HOST_SESSION_SERVICE = "{SESSION_SERVICE}";
++		public const string HOST_SESSION_SERVICE = "{FRIDA_ROMDON_32}";
  	}
  
  	namespace ObjectPath {
@@ -424,7 +424,7 @@ index 0000000..b642624
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
 +        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
 diff --git a/src/barebone/script-runtime/message-dispatcher.ts b/src/barebone/script-runtime/message-dispatcher.ts
-index 13b3ba1..4742a3a 100644
+index 13b3ba1..230f0ff 100644
 --- a/src/barebone/script-runtime/message-dispatcher.ts
 +++ b/src/barebone/script-runtime/message-dispatcher.ts
 @@ -3,7 +3,7 @@ export class MessageDispatcher {
@@ -432,7 +432,7 @@ index 13b3ba1..4742a3a 100644
  
      dispatch(message: any, data: ArrayBuffer | null) {
 -        if (message instanceof Array && message[0] === "frida:rpc") {
-+        if (message instanceof Array && message[0] === "{FRIDA_PREFIX}:rpc") {
++        if (message instanceof Array && message[0] === "{FRIDA_ROMDON_9}") {
              this.#handleRpcMessage(message[1], message[2], message.slice(3));
          } else {
              this.#messages.push([message, data]);
@@ -441,10 +441,10 @@ index 13b3ba1..4742a3a 100644
      #reply(id: number, type: RpcMessageType, result: any, params: any[] = []) {
          if (result instanceof ArrayBuffer)
 -            send(["frida:rpc", id, type, {}].concat(params), result);
-+            send(["{FRIDA_PREFIX}:rpc", id, type, {}].concat(params), result);
++            send(["{FRIDA_ROMDON_9}", id, type, {}].concat(params), result);
          else
 -            send(["frida:rpc", id, type, result].concat(params));
-+            send(["{FRIDA_PREFIX}:rpc", id, type, result].concat(params));
++            send(["{FRIDA_ROMDON_9}", id, type, result].concat(params));
      }
  
      #dispatchMessages() {

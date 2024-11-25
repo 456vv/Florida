@@ -146,10 +146,14 @@ jobs:
         echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT"
         
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
-        FRIDA_PREFIX="$(head /dev/urandom -c 100 | tr -dc a-z | head -c 5)"
-        FRIDA_PREFIX_U="$(echo ${FRIDA_PREFIX} | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
-        SESSION_SERVICE="$(head /dev/urandom -c 200 | tr -cd 'a-f0-9' | head -c 32)"
         RANDOM_SEED=$(echo "$FRIDA_VERSION" | sed 's/[v\.]//g')
+        FRIDA_RANDOM=$(python3 g.py ${RANDOM_SEED} 32)
+        FRIDA_PREFIX =$(FRIDA_RANDOM:0:5)
+        FRIDA_PREFIX_U="$(echo ${FRIDA_PREFIX} | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+        
+        echo "random_seed:$RANDOM_SEED"
+        echo "frida_prefix:$FRIDA_PREFIX"
+        echo "frida_random:$FRIDA_RANDOM"
         
         echo "git clone --recurse-submodules -b ${FRIDA_VERSION} https://github.com/frida/frida"
         git clone --recurse-submodules https://github.com/frida/frida -b "${FRIDA_VERSION}"
@@ -158,9 +162,11 @@ jobs:
         do
           name=$(basename $path)
           real=$(realpath $path)
+          for i in {1..32}:
+          	sed -i "s/{FRIDA_ROMDON_$i}/${FRIDA_RANDOM:0:${i}}/g" $path/*.patch
+          done
           sed -i "s/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g" $path/*.patch
           sed -i "s/{FRIDA_PREFIX_U}/${FRIDA_PREFIX_U}/g" $path/*.patch
-          sed -i "s/{SESSION_SERVICE}/${SESSION_SERVICE}/g" $path/*.patch
           sed -i "s/{RANDOM_SEED}/${RANDOM_SEED}/g" $path/*.patch
           echo "$path"
           echo "Apply patches in $real to frida/subprojects/$name"
