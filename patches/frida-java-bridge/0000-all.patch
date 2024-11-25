@@ -1,0 +1,105 @@
+From 2a20cd36bc10c00c6513a623c8c0d0f4f81f8060 Mon Sep 17 00:00:00 2001
+From: 456vv <123@456vv.com>
+Date: Mon, 25 Nov 2024 16:40:57 +0800
+Subject: [PATCH] all
+
+---
+ lib/android.js | 51 ++++++++++++++++++++++++++------------------------
+ lib/vm.js      |  2 +-
+ 2 files changed, 28 insertions(+), 25 deletions(-)
+
+diff --git a/lib/android.js b/lib/android.js
+index f5dcfbe..0b02b22 100644
+--- a/lib/android.js
++++ b/lib/android.js
+@@ -44,6 +44,7 @@ const X86_JMP_MAX_DISTANCE = 0x7fffbfff;
+ const ARM64_ADRP_MAX_DISTANCE = 0xfffff000;
+ 
+ const ENV_VTABLE_OFFSET_EXCEPTION_CLEAR = 17 * pointerSize;
++const ENV_VTABLE_OFFSET_EXCEPTION_CLEAR_ALT = 250 * pointerSize;
+ const ENV_VTABLE_OFFSET_FATAL_ERROR = 18 * pointerSize;
+ 
+ const DVM_JNI_ENV_OFFSET_SELF = 12;
+@@ -1893,30 +1894,24 @@ function ensureArtKnowsHowToHandleReplacementMethods (vm) {
+ 
+   const apiLevel = getAndroidApiLevel();
+ 
+-  const mayUseCollector = (apiLevel > 28)
+-    ? (type) => {
+-        const impl = Module.findExportByName('libart.so', '_ZNK3art2gc4Heap15MayUseCollectorENS0_13CollectorTypeE');
+-        if (impl === null) {
+-          return false;
+-        }
+-        return new NativeFunction(impl, 'bool', ['pointer', 'int'])(getApi().artHeap, type);
+-      }
+-    : () => false;
+-  const kCollectorTypeCMC = 3;
+-
+-  if (mayUseCollector(kCollectorTypeCMC)) {
+-    Interceptor.attach(Module.getExportByName('libart.so', '_ZN3art6Thread15RunFlipFunctionEPS0_b'), artController.hooks.Gc.runFlip);
+-  } else {
+-    let copyingPhase = null;
+-    if (apiLevel > 28) {
+-      copyingPhase = Module.findExportByName('libart.so', '_ZN3art2gc9collector17ConcurrentCopying12CopyingPhaseEv');
+-    } else if (apiLevel > 22) {
+-      copyingPhase = Module.findExportByName('libart.so', '_ZN3art2gc9collector17ConcurrentCopying12MarkingPhaseEv');
+-    }
+-    if (copyingPhase !== null) {
+-      Interceptor.attach(copyingPhase, artController.hooks.Gc.copyingPhase);
+-    }
++  let copyingPhase = null;
++  if (apiLevel > 28) {
++    copyingPhase = Module.findExportByName('libart.so', '_ZN3art2gc9collector17ConcurrentCopying12CopyingPhaseEv');
++  } else if (apiLevel > 22) {
++    copyingPhase = Module.findExportByName('libart.so', '_ZN3art2gc9collector17ConcurrentCopying12MarkingPhaseEv');
+   }
++  if (copyingPhase !== null) {
++    Interceptor.attach(copyingPhase, artController.hooks.Gc.copyingPhase);
++  }
++  
++  let runFlip = null;
++  runFlip = Module.findExportByName('libart.so', '_ZN3art6Thread15RunFlipFunctionEPS0_b');
++  if (runFlip === null) {
++    runFlip = Module.findExportByName('libart.so', '_ZN3art6Thread15RunFlipFunctionEPS0'); // api 35
++  }
++  if (runFlip !== null) {
++    Interceptor.attach(runFlip, artController.hooks.Gc.runFlip);
++   }
+ }
+ 
+ const artGetOatQuickMethodHeaderInlinedCopyHandler = {
+@@ -3926,9 +3921,17 @@ const threadStateTransitionRecompilers = {
+ 
+ function makeArtThreadStateTransitionImpl (vm, env, callback) {
+   const envVtable = env.handle.readPointer();
+-  const exceptionClearImpl = envVtable.add(ENV_VTABLE_OFFSET_EXCEPTION_CLEAR).readPointer();
++  let exceptionClearImpl = envVtable.add(ENV_VTABLE_OFFSET_EXCEPTION_CLEAR).readPointer();
+   const nextFuncImpl = envVtable.add(ENV_VTABLE_OFFSET_FATAL_ERROR).readPointer();
+ 
++  if (Process.arch === 'arm64') {
++    const size = 0x150;
++    const pattern = "c0 03 5f d6"; ///ret
++    if (Memory.scanSync(exceptionClearImpl, size, pattern).length > 0) {
++      exceptionClearImpl = envVtable.add(ENV_VTABLE_OFFSET_EXCEPTION_CLEAR_ALT).readPointer();
++    }
++  }
++
+   const recompile = threadStateTransitionRecompilers[Process.arch];
+   if (recompile === undefined) {
+     throw new Error('Not yet implemented for ' + Process.arch);
+diff --git a/lib/vm.js b/lib/vm.js
+index 0daed3e..aca88df 100644
+--- a/lib/vm.js
++++ b/lib/vm.js
+@@ -91,7 +91,7 @@ function VM (api) {
+     const envBuf = Memory.alloc(pointerSize);
+     const result = getEnv(handle, envBuf, JNI_VERSION_1_6);
+     if (result === -2) {
+-      throw new Error('Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback');
++      throw new Error('C u r r e n t  t h r e a d  i s  n o t a t t a c h e d  t o  t h e  J a v a  V M ;  p l e a s e  m o v e  t h i s  c o d e  i n s i d e a  J a v a . p e r f o r m ( )  c a l l b a c k');
+     }
+     checkJniResult('VM::GetEnv', result);
+     return new Env(envBuf.readPointer(), this);
+-- 
+2.47.0.windows.2
+
