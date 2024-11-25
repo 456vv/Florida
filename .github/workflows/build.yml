@@ -148,7 +148,7 @@ jobs:
         FRIDA_VERSION=${{ needs.check_version.outputs.FRIDA_VERSION }}
         RANDOM_SEED=$(echo "$FRIDA_VERSION" | sed 's/[v\.]//g')
         FRIDA_RANDOM=$(python3 g.py ${RANDOM_SEED} 32)
-        FRIDA_PREFIX =${FRIDA_RANDOM:0:5}
+        FRIDA_PREFIX =$(ehco ${FRIDA_RANDOM:0:5})
         FRIDA_PREFIX_U="$(echo ${FRIDA_PREFIX} | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
         
         echo "random_seed:$RANDOM_SEED"
