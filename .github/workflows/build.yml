@@ -164,7 +164,7 @@ jobs:
           real=$(realpath $path)
           for i in {1..32}
           do
-          	sed -i "s/{FRIDA_ROMDON_$i}/${FRIDA_RANDOM:0:${i}}/g" $path/*.patch
+          	sed -i "s/{FRIDA_ROMDON_${i}}/${FRIDA_RANDOM:0:${i}}/g" $path/*.patch
           done
           sed -i "s/{FRIDA_PREFIX}/${FRIDA_PREFIX}/g" $path/*.patch
           sed -i "s/{FRIDA_PREFIX_U}/${FRIDA_PREFIX_U}/g" $path/*.patch
