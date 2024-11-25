@@ -1,6 +1,6 @@
-From 2c35aae1b9711bd8017e44a447a1afe6c2ef3672 Mon Sep 17 00:00:00 2001
+From b3c553c370aad33692c46d302df4bc9faf99b3b6 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Mon, 25 Nov 2024 22:11:26 +0800
+Date: Mon, 25 Nov 2024 22:55:54 +0800
 Subject: [PATCH] all
 
 ---
@@ -11,30 +11,29 @@ Subject: [PATCH] all
  lib/base/session.vala                         |  2 +-
  lib/base/socket.vala                          | 14 ++---
  lib/gadget/gadget-glue.c                      |  2 +-
- lib/gadget/gadget.vala                        |  4 +-
+ lib/gadget/gadget.vala                        |  6 +-
  lib/pipe/pipe.vala                            |  2 +-
  lib/selinux/patch.c                           | 10 ++--
  meson.build                                   |  2 +-
  server/server.vala                            |  5 +-
- src/agent-container.vala                      |  4 +-
+ src/agent-container.vala                      |  2 +-
  src/anti-anti-frida.py                        | 56 +++++++++++++++++++
  .../script-runtime/message-dispatcher.ts      |  6 +-
- src/darwin/darwin-host-session.vala           |  2 +-
  src/darwin/frida-helper-service.vala          |  2 +-
  src/droidy/droidy-client.vala                 |  2 +-
+ src/droidy/droidy-host-session.vala           |  4 +-
  src/droidy/injector.vala                      |  2 +-
- src/freebsd/freebsd-host-session.vala         |  2 +-
  src/frida-glue.c                              |  3 +-
  src/fruity/device-monitor.vala                |  2 +-
  src/fruity/fruity-host-session.vala           |  2 +-
  src/linux/frida-helper-backend.vala           |  4 +-
  src/linux/frida-helper-process.vala           |  4 +-
  src/linux/linjector.vala                      |  6 +-
- src/linux/linux-host-session.vala             |  8 +--
+ src/linux/linux-host-session.vala             |  6 +-
  src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/frida-helper-process.vala         |  2 +-
  src/windows/windows-host-session.vala         |  2 +-
- 30 files changed, 114 insertions(+), 56 deletions(-)
+ 29 files changed, 113 insertions(+), 55 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -210,7 +209,7 @@ index 256b8d9..8ff997e 100644
  
  void
 diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
-index 9b2aa92..ef228a4 100644
+index 9b2aa92..2b39cb5 100644
 --- a/lib/gadget/gadget.vala
 +++ b/lib/gadget/gadget.vala
 @@ -650,7 +650,7 @@ namespace Frida.Gadget {
@@ -231,6 +230,15 @@ index 9b2aa92..ef228a4 100644
  					if (request != null) {
  						request.set_value (0);
  					} else {
+@@ -1780,7 +1780,7 @@ namespace Frida.Gadget {
+ 				}
+ 
+ 				uint pid = get_process_id ();
+-				string identifier = "re.frida.Gadget";
++				string identifier = "re.{FRIDA_PREFIX}.Gadget";
+ 				string name = "Gadget";
+ 				var no_parameters = make_parameters_dict ();
+ 				this_app = HostApplicationInfo (identifier, name, pid, no_parameters);
 diff --git a/lib/pipe/pipe.vala b/lib/pipe/pipe.vala
 index 58d064d..cd686c0 100644
 --- a/lib/pipe/pipe.vala
@@ -322,18 +330,9 @@ index 525c145..fd807f5 100644
  
  			_stop_run_loop ();
 diff --git a/src/agent-container.vala b/src/agent-container.vala
-index 73e0c01..3e0c82e 100644
+index 73e0c01..553a683 100644
 --- a/src/agent-container.vala
 +++ b/src/agent-container.vala
-@@ -28,7 +28,7 @@ namespace Frida {
- 			}
- 
- 			void * main_func_symbol;
--			var main_func_found = container.module.symbol ("frida_agent_main", out main_func_symbol);
-+			var main_func_found = container.module.symbol ("{FRIDA_PREFIX}_agent_main", out main_func_symbol);
- 			assert (main_func_found);
- 			container.main_impl = (AgentMainFunc) main_func_symbol;
- 
 @@ -103,7 +103,7 @@ namespace Frida {
  		}
  
@@ -430,19 +429,6 @@ index 13b3ba1..4742a3a 100644
      }
  
      #dispatchMessages() {
-diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
-index c4eaff3..68448b0 100644
---- a/src/darwin/darwin-host-session.vala
-+++ b/src/darwin/darwin-host-session.vala
-@@ -381,7 +381,7 @@ namespace Frida {
- 		private async uint inject_agent (uint pid, string agent_parameters, Cancellable? cancellable) throws Error, IOError {
- 			uint id;
- 
--			unowned string entrypoint = "frida_agent_main";
-+			unowned string entrypoint = "{FRIDA_PREFIX}_agent_main";
- #if HAVE_EMBEDDED_ASSETS
- 			id = yield fruitjector.inject_library_resource (pid, agent, entrypoint, agent_parameters, cancellable);
- #else
 diff --git a/src/darwin/frida-helper-service.vala b/src/darwin/frida-helper-service.vala
 index 5847c48..09f0e66 100644
 --- a/src/darwin/frida-helper-service.vala
@@ -469,6 +455,28 @@ index ddc56cc..c3464e7 100644
  
  						default:
  							var length = parse_length (command_or_length);
+diff --git a/src/droidy/droidy-host-session.vala b/src/droidy/droidy-host-session.vala
+index 0a8dc6f..5bc0d6f 100644
+--- a/src/droidy/droidy-host-session.vala
++++ b/src/droidy/droidy-host-session.vala
+@@ -214,7 +214,7 @@ namespace Frida {
+ 		private Cancellable io_cancellable = new Cancellable ();
+ 
+ 		private const double MIN_SERVER_CHECK_INTERVAL = 5.0;
+-		private const string GADGET_APP_ID = "re.frida.Gadget";
++		private const string GADGET_APP_ID = "re.{FRIDA_PREFIX}.Gadget";
+ 
+ 		public DroidyHostSession (Droidy.DeviceDetails device_details, HostChannelProvider channel_provider) {
+ 			Object (
+@@ -490,7 +490,7 @@ namespace Frida {
+ 				if (opts.has_selected_identifiers ()) {
+ 					gadget_is_selected = false;
+ 					opts.enumerate_selected_identifiers (identifier => {
+-						if (identifier == "re.frida.Gadget")
++						if (identifier == "re.{FRIDA_PREFIX}.Gadget")
+ 							gadget_is_selected = true;
+ 					});
+ 				}
 diff --git a/src/droidy/injector.vala b/src/droidy/injector.vala
 index f2acafb..7aeb17c 100644
 --- a/src/droidy/injector.vala
@@ -482,19 +490,6 @@ index f2acafb..7aeb17c 100644
  
  			bool waiting = false;
  			uint target_pid = 0;
-diff --git a/src/freebsd/freebsd-host-session.vala b/src/freebsd/freebsd-host-session.vala
-index a2204a4..e464fce 100644
---- a/src/freebsd/freebsd-host-session.vala
-+++ b/src/freebsd/freebsd-host-session.vala
-@@ -197,7 +197,7 @@ namespace Frida {
- 
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
--			var id = yield binjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
-+			var id = yield binjector.inject_library_resource (pid, agent_desc, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
 diff --git a/src/frida-glue.c b/src/frida-glue.c
 index ee8f073..beed10a 100644
 --- a/src/frida-glue.c
@@ -612,7 +607,7 @@ index fa6e52c..38ef430 100644
  	}
  }
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
-index eaeaed5..eda7e84 100644
+index eaeaed5..6a55b2c 100644
 --- a/src/linux/linux-host-session.vala
 +++ b/src/linux/linux-host-session.vala
 @@ -128,12 +128,12 @@ namespace Frida {
@@ -631,15 +626,6 @@ index eaeaed5..eda7e84 100644
  				},
  				AgentMode.INSTANCED,
  				tempdir);
-@@ -426,7 +426,7 @@ namespace Frida {
- 		protected override async Future<IOStream> perform_attach_to (uint pid, HashTable<string, Variant> options,
- 				Cancellable? cancellable, out Object? transport) throws Error, IOError {
- 			uint id;
--			string entrypoint = "frida_agent_main";
-+			string entrypoint = "{FRIDA_PREFIX}_agent_main";
- 			string parameters = make_agent_parameters (pid, "", options);
- 			AgentFeatures features = CONTROL_CHANNEL;
- 			var linjector = (Linjector) injector;
 diff --git a/src/qnx/qnx-host-session.vala b/src/qnx/qnx-host-session.vala
 index 69f2995..216458c 100644
 --- a/src/qnx/qnx-host-session.vala
