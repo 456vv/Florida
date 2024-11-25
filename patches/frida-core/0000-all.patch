@@ -1,6 +1,6 @@
-From d95c37316e2972233e33e460a3451cf285f5ea0f Mon Sep 17 00:00:00 2001
+From ed092ff04badbfaa3eec20b2dac793b280e77e48 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Mon, 25 Nov 2024 09:41:31 +0800
+Date: Mon, 25 Nov 2024 12:14:13 +0800
 Subject: [PATCH] all
 
 ---
@@ -25,14 +25,15 @@ Subject: [PATCH] all
  src/droidy/injector.vala                      |  2 +-
  src/freebsd/freebsd-host-session.vala         |  2 +-
  src/frida-glue.c                              |  3 +-
- src/frida.vala                                |  2 +-
+ src/fruity/device-monitor.vala                |  2 +-
+ src/fruity/fruity-host-session.vala           |  2 +-
  src/linux/frida-helper-backend.vala           |  4 +-
  src/linux/frida-helper-process.vala           |  4 +-
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  8 +--
  src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/windows-host-session.vala         |  2 +-
- 28 files changed, 115 insertions(+), 57 deletions(-)
+ 29 files changed, 116 insertions(+), 58 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -102,7 +103,7 @@ index 449eb94..d4ad4f0 100644
  			string local_cert_pem;
  			string local_key_pem;
 diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
-index 3695ba8..6972263 100644
+index 8990b70..73cc17a 100644
 --- a/lib/base/rpc.vala
 +++ b/lib/base/rpc.vala
 @@ -17,7 +17,7 @@ namespace Frida {
@@ -217,7 +218,7 @@ index 256b8d9..8ff997e 100644
  
  void
 diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
-index f3a7bc1..9a3739f 100644
+index 9b2aa92..9179ded 100644
 --- a/lib/gadget/gadget.vala
 +++ b/lib/gadget/gadget.vala
 @@ -650,7 +650,7 @@ namespace Frida.Gadget {
@@ -238,7 +239,7 @@ index f3a7bc1..9a3739f 100644
  					if (request != null) {
  						request.set_value (0);
  					} else {
-@@ -1781,8 +1781,8 @@ namespace Frida.Gadget {
+@@ -1780,8 +1780,8 @@ namespace Frida.Gadget {
  				}
  
  				uint pid = get_process_id ();
@@ -297,10 +298,10 @@ index db631ff..1ef751b 100644
      g_printerr ("Unable to add SELinux type: %s\n", error->message);
      g_clear_error (&error);
 diff --git a/meson.build b/meson.build
-index c045aec..7f4af72 100644
+index ad63c67..db2ed1b 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -674,7 +674,7 @@ configure_file(
+@@ -681,7 +681,7 @@ configure_file(
  
  add_project_arguments(
    (cc.get_argument_syntax() == 'msvc') ? '/FI' : '-include', meson.current_build_dir() / 'config.h',
@@ -449,7 +450,7 @@ index 13b3ba1..230f0ff 100644
  
      #dispatchMessages() {
 diff --git a/src/darwin/darwin-host-session.vala b/src/darwin/darwin-host-session.vala
-index ab9b290..99e3ef8 100644
+index c4eaff3..68448b0 100644
 --- a/src/darwin/darwin-host-session.vala
 +++ b/src/darwin/darwin-host-session.vala
 @@ -381,7 +381,7 @@ namespace Frida {
@@ -531,24 +532,37 @@ index ee8f073..beed10a 100644
      }
  
      g_once_init_leave (&frida_initialized, TRUE);
-diff --git a/src/frida.vala b/src/frida.vala
-index cc065e0..9061ee1 100644
---- a/src/frida.vala
-+++ b/src/frida.vala
-@@ -2418,7 +2418,7 @@ namespace Frida {
- 			dbus_context = yield get_dbus_context ();
+diff --git a/src/fruity/device-monitor.vala b/src/fruity/device-monitor.vala
+index 091574f..1a999ef 100644
+--- a/src/fruity/device-monitor.vala
++++ b/src/fruity/device-monitor.vala
+@@ -784,7 +784,7 @@ namespace Frida.Fruity {
+ 			lock (state)
+ 				state = STARTING;
  
- 			var agent = new Nice.Agent.full (dbus_context, Nice.Compatibility.RFC5245, ICE_TRICKLE);
--			agent.set_software ("Frida");
-+			agent.set_software ("{FRIDA_PREFIX_U}");
- 			agent.controlling_mode = true;
- 			agent.ice_tcp = false;
+-			usb_worker = new Thread<void> ("frida-core-device-usb", perform_usb_work);
++			usb_worker = new Thread<void> ("{FRIDA_PREFIX}-core-device-usb", perform_usb_work);
  
+ 			yield network_browser.start (cancellable);
+ 
+diff --git a/src/fruity/fruity-host-session.vala b/src/fruity/fruity-host-session.vala
+index 56c192d..8b9ca4d 100644
+--- a/src/fruity/fruity-host-session.vala
++++ b/src/fruity/fruity-host-session.vala
+@@ -182,7 +182,7 @@ namespace Frida {
+ 		private Cancellable io_cancellable = new Cancellable ();
+ 
+ 		private const double MIN_SERVER_CHECK_INTERVAL = 5.0;
+-		private const string GADGET_APP_ID = "re.frida.Gadget";
++		private const string GADGET_APP_ID = "re.{FRIDA_PREFIX}.Gadget";
+ 		private const string DEBUGSERVER_ENDPOINT_17PLUS = "com.apple.internal.dt.remote.debugproxy";
+ 		private const string DEBUGSERVER_ENDPOINT_14PLUS = "com.apple.debugserver.DVTSecureSocketProxy";
+ 		private const string DEBUGSERVER_ENDPOINT_LEGACY = "com.apple.debugserver?tls=handshake-only";
 diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index ed84fc4..11188a0 100644
+index cb50d61..5a74f7f 100644
 --- a/src/linux/frida-helper-backend.vala
 +++ b/src/linux/frida-helper-backend.vala
-@@ -1235,7 +1235,7 @@ namespace Frida {
+@@ -1242,7 +1242,7 @@ namespace Frida {
  		}
  
  		private static string make_fallback_address () {
@@ -557,7 +571,7 @@ index ed84fc4..11188a0 100644
  		}
  
  		private Future<RemoteAgent> establish_connection (LoaderLaunch launch, InjectSpec spec, BootstrapResult bres,
-@@ -3237,7 +3237,7 @@ namespace Frida {
+@@ -3258,7 +3258,7 @@ namespace Frida {
  		}
  
  		private int memfd_create (string name, uint flags) {
@@ -617,7 +631,7 @@ index fa6e52c..38ef430 100644
  	}
  }
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
-index 50470ac..a0db8eb 100644
+index eaeaed5..eda7e84 100644
 --- a/src/linux/linux-host-session.vala
 +++ b/src/linux/linux-host-session.vala
 @@ -128,12 +128,12 @@ namespace Frida {
