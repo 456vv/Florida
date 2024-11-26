@@ -1,6 +1,6 @@
-From b3c553c370aad33692c46d302df4bc9faf99b3b6 Mon Sep 17 00:00:00 2001
+From 3ed5309eeaf36d831c161e139640ede9d6d4d1ae Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Mon, 25 Nov 2024 22:55:54 +0800
+Date: Tue, 26 Nov 2024 17:43:47 +0800
 Subject: [PATCH] all
 
 ---
@@ -11,7 +11,7 @@ Subject: [PATCH] all
  lib/base/session.vala                         |  2 +-
  lib/base/socket.vala                          | 14 ++---
  lib/gadget/gadget-glue.c                      |  2 +-
- lib/gadget/gadget.vala                        |  6 +-
+ lib/gadget/gadget.vala                        |  8 +--
  lib/pipe/pipe.vala                            |  2 +-
  lib/selinux/patch.c                           | 10 ++--
  meson.build                                   |  2 +-
@@ -33,7 +33,7 @@ Subject: [PATCH] all
  src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/frida-helper-process.vala         |  2 +-
  src/windows/windows-host-session.vala         |  2 +-
- 29 files changed, 113 insertions(+), 55 deletions(-)
+ 29 files changed, 114 insertions(+), 56 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -209,7 +209,7 @@ index 256b8d9..8ff997e 100644
  
  void
 diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
-index 9b2aa92..2b39cb5 100644
+index 9b2aa92..9179ded 100644
 --- a/lib/gadget/gadget.vala
 +++ b/lib/gadget/gadget.vala
 @@ -650,7 +650,7 @@ namespace Frida.Gadget {
@@ -230,15 +230,17 @@ index 9b2aa92..2b39cb5 100644
  					if (request != null) {
  						request.set_value (0);
  					} else {
-@@ -1780,7 +1780,7 @@ namespace Frida.Gadget {
+@@ -1780,8 +1780,8 @@ namespace Frida.Gadget {
  				}
  
  				uint pid = get_process_id ();
 -				string identifier = "re.frida.Gadget";
+-				string name = "Gadget";
 +				string identifier = "re.{FRIDA_PREFIX}.Gadget";
- 				string name = "Gadget";
++				string name = "{FRIDA_PREFIX_U}";
  				var no_parameters = make_parameters_dict ();
  				this_app = HostApplicationInfo (identifier, name, pid, no_parameters);
+ 				this_process = HostProcessInfo (pid, name, no_parameters);
 diff --git a/lib/pipe/pipe.vala b/lib/pipe/pipe.vala
 index 58d064d..cd686c0 100644
 --- a/lib/pipe/pipe.vala
