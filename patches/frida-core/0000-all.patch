@@ -1,6 +1,6 @@
-From 3ed5309eeaf36d831c161e139640ede9d6d4d1ae Mon Sep 17 00:00:00 2001
+From 2765e5b1d5216cbe4885dc8979b60b83c9cb7c2a Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Tue, 26 Nov 2024 17:43:47 +0800
+Date: Thu, 19 Dec 2024 17:53:31 +0800
 Subject: [PATCH] all
 
 ---
@@ -23,17 +23,18 @@ Subject: [PATCH] all
  src/droidy/droidy-client.vala                 |  2 +-
  src/droidy/droidy-host-session.vala           |  4 +-
  src/droidy/injector.vala                      |  2 +-
+ src/freebsd/binjector-glue.c                  |  2 +-
  src/frida-glue.c                              |  3 +-
  src/fruity/device-monitor.vala                |  2 +-
  src/fruity/fruity-host-session.vala           |  2 +-
- src/linux/frida-helper-backend.vala           |  4 +-
+ src/linux/frida-helper-backend.vala           |  2 +-
  src/linux/frida-helper-process.vala           |  4 +-
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
  src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/frida-helper-process.vala         |  2 +-
  src/windows/windows-host-session.vala         |  2 +-
- 29 files changed, 114 insertions(+), 56 deletions(-)
+ 30 files changed, 114 insertions(+), 56 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -492,6 +493,19 @@ index f2acafb..7aeb17c 100644
  
  			bool waiting = false;
  			uint target_pid = 0;
+diff --git a/src/freebsd/binjector-glue.c b/src/freebsd/binjector-glue.c
+index 2bdce0a..02d9b57 100644
+--- a/src/freebsd/binjector-glue.c
++++ b/src/freebsd/binjector-glue.c
+@@ -805,7 +805,7 @@ frida_inject_instance_init_fifo (FridaInjectInstance * self)
+ {
+   const int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+ 
+-  self->fifo_path = g_strdup_printf ("%s/binjector-%u", self->temp_path, self->id);
++  self->fifo_path = g_strdup_printf ("%s/%p-%u", self->temp_path, self, self->id);
+ 
+   mkfifo (self->fifo_path, mode);
+   chmod (self->fifo_path, mode);
 diff --git a/src/frida-glue.c b/src/frida-glue.c
 index ee8f073..beed10a 100644
 --- a/src/frida-glue.c
@@ -537,7 +551,7 @@ index 56c192d..8b9ca4d 100644
  		private const string DEBUGSERVER_ENDPOINT_14PLUS = "com.apple.debugserver.DVTSecureSocketProxy";
  		private const string DEBUGSERVER_ENDPOINT_LEGACY = "com.apple.debugserver?tls=handshake-only";
 diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index cb50d61..5a74f7f 100644
+index cb50d61..58f490a 100644
 --- a/src/linux/frida-helper-backend.vala
 +++ b/src/linux/frida-helper-backend.vala
 @@ -1242,7 +1242,7 @@ namespace Frida {
@@ -549,15 +563,6 @@ index cb50d61..5a74f7f 100644
  		}
  
  		private Future<RemoteAgent> establish_connection (LoaderLaunch launch, InjectSpec spec, BootstrapResult bres,
-@@ -3258,7 +3258,7 @@ namespace Frida {
- 		}
- 
- 		private int memfd_create (string name, uint flags) {
--			return Linux.syscall (SysCall.memfd_create, name, flags);
-+			return Linux.syscall (SysCall.memfd_create, "jit-cache", flags);
- 		}
- 	}
- 
 diff --git a/src/linux/frida-helper-process.vala b/src/linux/frida-helper-process.vala
 index 7e5cf0c..7d96f1a 100644
 --- a/src/linux/frida-helper-process.vala
@@ -609,7 +614,7 @@ index fa6e52c..38ef430 100644
  	}
  }
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
-index eaeaed5..6a55b2c 100644
+index eaeaed5..867113f 100644
 --- a/src/linux/linux-host-session.vala
 +++ b/src/linux/linux-host-session.vala
 @@ -128,12 +128,12 @@ namespace Frida {
@@ -617,14 +622,14 @@ index eaeaed5..6a55b2c 100644
  			var emulated_arm = Frida.Data.Agent.get_frida_agent_arm_so_blob ();
  			var emulated_arm64 = Frida.Data.Agent.get_frida_agent_arm64_so_blob ();
 -			agent = new AgentDescriptor (PathTemplate ("frida-agent-<arch>.so"),
-+			agent = new AgentDescriptor (PathTemplate ("{FRIDA_PREFIX}-agent-<arch>.so"),
++			agent = new AgentDescriptor (PathTemplate ("{FRIDA_PREFIX}-<arch>.so"),
  				new Bytes.static (blob32.data),
  				new Bytes.static (blob64.data),
  				new AgentResource[] {
 -					new AgentResource ("frida-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
 -					new AgentResource ("frida-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
-+					new AgentResource ("{FRIDA_PREFIX}-agent-arm.so", new Bytes.static (emulated_arm.data), tempdir),
-+					new AgentResource ("{FRIDA_PREFIX}-agent-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
++					new AgentResource ("{FRIDA_PREFIX}-arm.so", new Bytes.static (emulated_arm.data), tempdir),
++					new AgentResource ("{FRIDA_PREFIX}-arm64.so", new Bytes.static (emulated_arm64.data), tempdir),
  				},
  				AgentMode.INSTANCED,
  				tempdir);
