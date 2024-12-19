@@ -1,6 +1,6 @@
-From 2765e5b1d5216cbe4885dc8979b60b83c9cb7c2a Mon Sep 17 00:00:00 2001
+From 9369a121eb797dfff38decdf60b879a376e82eef Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 19 Dec 2024 17:53:31 +0800
+Date: Thu, 19 Dec 2024 18:20:36 +0800
 Subject: [PATCH] all
 
 ---
@@ -290,7 +290,7 @@ index db631ff..1ef751b 100644
      g_printerr ("Unable to add SELinux type: %s\n", error->message);
      g_clear_error (&error);
 diff --git a/meson.build b/meson.build
-index ad63c67..db2ed1b 100644
+index 70d6a60..e48e34f 100644
 --- a/meson.build
 +++ b/meson.build
 @@ -681,7 +681,7 @@ configure_file(
@@ -525,10 +525,10 @@ index ee8f073..beed10a 100644
  
      g_once_init_leave (&frida_initialized, TRUE);
 diff --git a/src/fruity/device-monitor.vala b/src/fruity/device-monitor.vala
-index 091574f..1a999ef 100644
+index d4f99d5..09e8eb7 100644
 --- a/src/fruity/device-monitor.vala
 +++ b/src/fruity/device-monitor.vala
-@@ -784,7 +784,7 @@ namespace Frida.Fruity {
+@@ -814,7 +814,7 @@ namespace Frida.Fruity {
  			lock (state)
  				state = STARTING;
  
@@ -538,7 +538,7 @@ index 091574f..1a999ef 100644
  			yield network_browser.start (cancellable);
  
 diff --git a/src/fruity/fruity-host-session.vala b/src/fruity/fruity-host-session.vala
-index 56c192d..8b9ca4d 100644
+index cc0806d..4461be8 100644
 --- a/src/fruity/fruity-host-session.vala
 +++ b/src/fruity/fruity-host-session.vala
 @@ -182,7 +182,7 @@ namespace Frida {
