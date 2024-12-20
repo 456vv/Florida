@@ -1,6 +1,6 @@
-From 9369a121eb797dfff38decdf60b879a376e82eef Mon Sep 17 00:00:00 2001
+From c450bf1e8aae3e995072460b1a04355c7dfae32e Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Thu, 19 Dec 2024 18:20:36 +0800
+Date: Fri, 20 Dec 2024 23:31:43 +0800
 Subject: [PATCH] all
 
 ---
@@ -31,10 +31,8 @@ Subject: [PATCH] all
  src/linux/frida-helper-process.vala           |  4 +-
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
- src/qnx/qnx-host-session.vala                 |  2 +-
  src/windows/frida-helper-process.vala         |  2 +-
- src/windows/windows-host-session.vala         |  2 +-
- 30 files changed, 114 insertions(+), 56 deletions(-)
+ 28 files changed, 112 insertions(+), 54 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -633,19 +631,6 @@ index eaeaed5..867113f 100644
  				},
  				AgentMode.INSTANCED,
  				tempdir);
-diff --git a/src/qnx/qnx-host-session.vala b/src/qnx/qnx-host-session.vala
-index 69f2995..216458c 100644
---- a/src/qnx/qnx-host-session.vala
-+++ b/src/qnx/qnx-host-session.vala
-@@ -182,7 +182,7 @@ namespace Frida {
- 
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
--			var id = yield qinjector.inject_library_resource (pid, agent_desc, "frida_agent_main",
-+			var id = yield qinjector.inject_library_resource (pid, agent_desc, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
 diff --git a/src/windows/frida-helper-process.vala b/src/windows/frida-helper-process.vala
 index 682e64e..00d9cb4 100644
 --- a/src/windows/frida-helper-process.vala
@@ -659,19 +644,6 @@ index 682e64e..00d9cb4 100644
  			}
  
  			return yield obtain_request.future.wait_async (cancellable);
-diff --git a/src/windows/windows-host-session.vala b/src/windows/windows-host-session.vala
-index 5492edf..0c92e8e 100644
---- a/src/windows/windows-host-session.vala
-+++ b/src/windows/windows-host-session.vala
-@@ -292,7 +292,7 @@ namespace Frida {
- 			var stream_request = Pipe.open (t.local_address, cancellable);
- 
- 			var winjector = injector as Winjector;
--			var id = yield winjector.inject_library_resource (pid, agent, "frida_agent_main",
-+			var id = yield winjector.inject_library_resource (pid, agent, "{FRIDA_PREFIX}_agent_main",
- 				make_agent_parameters (pid, t.remote_address, options), cancellable);
- 			injectee_by_pid[pid] = id;
- 
 -- 
 2.47.0.windows.2
 
