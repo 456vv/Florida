@@ -1,38 +1,25 @@
-From c450bf1e8aae3e995072460b1a04355c7dfae32e Mon Sep 17 00:00:00 2001
+From 590c4ff8d183473ac4139930df448ae037cf5d2d Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Fri, 20 Dec 2024 23:31:43 +0800
+Date: Fri, 20 Dec 2024 23:52:55 +0800
 Subject: [PATCH] all
 
 ---
  lib/agent/agent.vala                          |  8 +--
  lib/base/p2p-glue.c                           |  2 +-
  lib/base/p2p.vala                             |  2 +-
- lib/base/rpc.vala                             |  6 +-
  lib/base/session.vala                         |  2 +-
- lib/base/socket.vala                          | 14 ++---
- lib/gadget/gadget-glue.c                      |  2 +-
- lib/gadget/gadget.vala                        |  8 +--
  lib/pipe/pipe.vala                            |  2 +-
  lib/selinux/patch.c                           | 10 ++--
- meson.build                                   |  2 +-
  server/server.vala                            |  5 +-
  src/agent-container.vala                      |  2 +-
  src/anti-anti-frida.py                        | 56 +++++++++++++++++++
  .../script-runtime/message-dispatcher.ts      |  6 +-
  src/darwin/frida-helper-service.vala          |  2 +-
  src/droidy/droidy-client.vala                 |  2 +-
- src/droidy/droidy-host-session.vala           |  4 +-
- src/droidy/injector.vala                      |  2 +-
- src/freebsd/binjector-glue.c                  |  2 +-
- src/frida-glue.c                              |  3 +-
  src/fruity/device-monitor.vala                |  2 +-
- src/fruity/fruity-host-session.vala           |  2 +-
- src/linux/frida-helper-backend.vala           |  2 +-
- src/linux/frida-helper-process.vala           |  4 +-
- src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
  src/windows/frida-helper-process.vala         |  2 +-
- 28 files changed, 112 insertions(+), 54 deletions(-)
+ 15 files changed, 83 insertions(+), 26 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -101,37 +88,6 @@ index 449eb94..d4ad4f0 100644
  			uint8[] local_cert_der;
  			string local_cert_pem;
  			string local_key_pem;
-diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
-index 8990b70..dadc268 100644
---- a/lib/base/rpc.vala
-+++ b/lib/base/rpc.vala
-@@ -17,7 +17,7 @@ namespace Frida {
- 			var request = new Json.Builder ();
- 			request
- 				.begin_array ()
--				.add_string_value ("frida:rpc")
-+				.add_string_value ("{FRIDA_PREFIX}:rpc")
- 				.add_string_value (request_id)
- 				.add_string_value ("call")
- 				.add_string_value (method)
-@@ -70,7 +70,7 @@ namespace Frida {
- 		}
- 
- 		public bool try_handle_message (string json) {
--			if (json.index_of ("\"frida:rpc\"") == -1)
-+			if (json.index_of ("\"{FRIDA_PREFIX}:rpc\"") == -1)
- 				return false;
- 
- 			var parser = new Json.Parser ();
-@@ -99,7 +99,7 @@ namespace Frida {
- 				return false;
- 
- 			string? type = rpc_message.get_element (0).get_string ();
--			if (type == null || type != "frida:rpc")
-+			if (type == null || type != "{FRIDA_PREFIX}:rpc")
- 				return false;
- 
- 			var request_id_value = rpc_message.get_element (1);
 diff --git a/lib/base/session.vala b/lib/base/session.vala
 index b9e56da..140e3bc 100644
 --- a/lib/base/session.vala
@@ -145,101 +101,6 @@ index b9e56da..140e3bc 100644
  			agent.controlling_mode = false;
  			agent.ice_tcp = false;
  
-diff --git a/lib/base/socket.vala b/lib/base/socket.vala
-index 07b6ab0..ac6de37 100644
---- a/lib/base/socket.vala
-+++ b/lib/base/socket.vala
-@@ -1,13 +1,13 @@
- namespace Frida {
--	public const uint16 DEFAULT_CONTROL_PORT = 27042;
--	public const uint16 DEFAULT_CLUSTER_PORT = 27052;
-+	public const uint16 DEFAULT_CONTROL_PORT = 27142;
-+	public const uint16 DEFAULT_CLUSTER_PORT = 27152;
- 
- 	public SocketConnectable parse_control_address (string? address, uint16 port = 0) throws Error {
--		return parse_socket_address (address, port, "127.0.0.1", DEFAULT_CONTROL_PORT);
-+		return parse_socket_address (address, port, "0.0.0.0", DEFAULT_CONTROL_PORT);
- 	}
- 
- 	public SocketConnectable parse_cluster_address (string? address, uint16 port = 0) throws Error {
--		return parse_socket_address (address, port, "127.0.0.1", DEFAULT_CLUSTER_PORT);
-+		return parse_socket_address (address, port, "0.0.0.0", DEFAULT_CLUSTER_PORT);
- 	}
- 
- 	public SocketConnectable parse_socket_address (string? address, uint16 port, string default_address,
-@@ -163,7 +163,7 @@ namespace Frida {
- 		var msg = new Soup.Message.from_uri ("GET", uri);
- 		Soup.websocket_client_prepare_handshake (msg, origin, null, null);
- 		msg.request_headers.replace ("Host", make_host_header_value (uri));
--		msg.request_headers.replace ("User-Agent", "Frida/" + _version_string ());
-+		msg.request_headers.replace ("User-Agent", "{FRIDA_PREFIX_U}/" + _version_string ());
- 		msg.request_headers.foreach ((name, val) => {
- 			request.append (name + ": " + val + "\r\n");
- 		});
-@@ -572,7 +572,7 @@ namespace Frida {
- 
- 			private void on_asset_request (Soup.Server server, Soup.ServerMessage msg, string path,
- 					HashTable<string, string>? query) {
--				msg.get_response_headers ().replace ("Server", "Frida/" + _version_string ());
-+				msg.get_response_headers ().replace ("Server", "{FRIDA_PREFIX}/" + _version_string ());
- 
- 				unowned string method = msg.get_method ();
- 				if (method != "GET" && method != "HEAD") {
-@@ -789,7 +789,7 @@ namespace Frida {
- <center><h1>301 Moved Permanently</h1></center>
- <hr><center>%s</center>
- </body>
--</html>""".printf ("Frida/" + _version_string ());
-+</html>""".printf ("{FRIDA_PREFIX}/" + _version_string ());
- 
- 				if (msg.get_method () == "HEAD") {
- 					var headers = msg.get_response_headers ();
-diff --git a/lib/gadget/gadget-glue.c b/lib/gadget/gadget-glue.c
-index 256b8d9..8ff997e 100644
---- a/lib/gadget/gadget-glue.c
-+++ b/lib/gadget/gadget-glue.c
-@@ -106,7 +106,7 @@ frida_gadget_environment_init (void)
- 
-   worker_context = g_main_context_ref (g_main_context_default ());
-   worker_loop = g_main_loop_new (worker_context, FALSE);
--  worker_thread = g_thread_new ("frida-gadget", run_worker_loop, NULL);
-+  worker_thread = g_thread_new ("{FRIDA_PREFIX}-gadget", run_worker_loop, NULL);
- }
- 
- void
-diff --git a/lib/gadget/gadget.vala b/lib/gadget/gadget.vala
-index 9b2aa92..9179ded 100644
---- a/lib/gadget/gadget.vala
-+++ b/lib/gadget/gadget.vala
-@@ -650,7 +650,7 @@ namespace Frida.Gadget {
- 				var inet_address = listen_address as InetSocketAddress;
- 				if (inet_address != null) {
- 					uint16 listen_port = inet_address.get_port ();
--					Environment.set_thread_name ("frida-gadget-tcp-%u".printf (listen_port));
-+					Environment.set_thread_name ("{FRIDA_PREFIX}-gadget-tcp-%u".printf (listen_port));
- 					if (request != null) {
- 						request.set_value (listen_port);
- 					} else {
-@@ -661,7 +661,7 @@ namespace Frida.Gadget {
- 				} else {
- #if !WINDOWS
- 					var unix_address = (UnixSocketAddress) listen_address;
--					Environment.set_thread_name ("frida-gadget-unix");
-+					Environment.set_thread_name ("{FRIDA_PREFIX}-gadget-unix");
- 					if (request != null) {
- 						request.set_value (0);
- 					} else {
-@@ -1780,8 +1780,8 @@ namespace Frida.Gadget {
- 				}
- 
- 				uint pid = get_process_id ();
--				string identifier = "re.frida.Gadget";
--				string name = "Gadget";
-+				string identifier = "re.{FRIDA_PREFIX}.Gadget";
-+				string name = "{FRIDA_PREFIX_U}";
- 				var no_parameters = make_parameters_dict ();
- 				this_app = HostApplicationInfo (identifier, name, pid, no_parameters);
- 				this_process = HostProcessInfo (pid, name, no_parameters);
 diff --git a/lib/pipe/pipe.vala b/lib/pipe/pipe.vala
 index 58d064d..cd686c0 100644
 --- a/lib/pipe/pipe.vala
@@ -287,19 +148,6 @@ index db631ff..1ef751b 100644
    {
      g_printerr ("Unable to add SELinux type: %s\n", error->message);
      g_clear_error (&error);
-diff --git a/meson.build b/meson.build
-index 70d6a60..e48e34f 100644
---- a/meson.build
-+++ b/meson.build
-@@ -681,7 +681,7 @@ configure_file(
- 
- add_project_arguments(
-   (cc.get_argument_syntax() == 'msvc') ? '/FI' : '-include', meson.current_build_dir() / 'config.h',
--  '-DG_LOG_DOMAIN="Frida"',
-+  '-DG_LOG_DOMAIN="{FRIDA_PREFIX_U}"',
-   '-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_56',
-   '-DG_DISABLE_DEPRECATED',
-   language: c_languages)
 diff --git a/server/server.vala b/server/server.vala
 index 525c145..fd807f5 100644
 --- a/server/server.vala
@@ -456,72 +304,6 @@ index ddc56cc..c3464e7 100644
  
  						default:
  							var length = parse_length (command_or_length);
-diff --git a/src/droidy/droidy-host-session.vala b/src/droidy/droidy-host-session.vala
-index 0a8dc6f..5bc0d6f 100644
---- a/src/droidy/droidy-host-session.vala
-+++ b/src/droidy/droidy-host-session.vala
-@@ -214,7 +214,7 @@ namespace Frida {
- 		private Cancellable io_cancellable = new Cancellable ();
- 
- 		private const double MIN_SERVER_CHECK_INTERVAL = 5.0;
--		private const string GADGET_APP_ID = "re.frida.Gadget";
-+		private const string GADGET_APP_ID = "re.{FRIDA_PREFIX}.Gadget";
- 
- 		public DroidyHostSession (Droidy.DeviceDetails device_details, HostChannelProvider channel_provider) {
- 			Object (
-@@ -490,7 +490,7 @@ namespace Frida {
- 				if (opts.has_selected_identifiers ()) {
- 					gadget_is_selected = false;
- 					opts.enumerate_selected_identifiers (identifier => {
--						if (identifier == "re.frida.Gadget")
-+						if (identifier == "re.{FRIDA_PREFIX}.Gadget")
- 							gadget_is_selected = true;
- 					});
- 				}
-diff --git a/src/droidy/injector.vala b/src/droidy/injector.vala
-index f2acafb..7aeb17c 100644
---- a/src/droidy/injector.vala
-+++ b/src/droidy/injector.vala
-@@ -81,7 +81,7 @@ namespace Frida.Droidy.Injector {
- 			string so_path_app = "/data/data/" + package + "/gadget.so";
- 			string config_path_shared = "/data/local/tmp/frida-gadget-" + instance_id + ".config";
- 			string config_path_app = "/data/data/" + package + "/gadget.config";
--			string unix_socket_path = "frida:" + package;
-+			string unix_socket_path = "{FRIDA_PREFIX}:" + package;
- 
- 			bool waiting = false;
- 			uint target_pid = 0;
-diff --git a/src/freebsd/binjector-glue.c b/src/freebsd/binjector-glue.c
-index 2bdce0a..02d9b57 100644
---- a/src/freebsd/binjector-glue.c
-+++ b/src/freebsd/binjector-glue.c
-@@ -805,7 +805,7 @@ frida_inject_instance_init_fifo (FridaInjectInstance * self)
- {
-   const int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
- 
--  self->fifo_path = g_strdup_printf ("%s/binjector-%u", self->temp_path, self->id);
-+  self->fifo_path = g_strdup_printf ("%s/%p-%u", self->temp_path, self, self->id);
- 
-   mkfifo (self->fifo_path, mode);
-   chmod (self->fifo_path, mode);
-diff --git a/src/frida-glue.c b/src/frida-glue.c
-index ee8f073..beed10a 100644
---- a/src/frida-glue.c
-+++ b/src/frida-glue.c
-@@ -40,11 +40,12 @@ frida_init_with_runtime (FridaRuntime rt)
-     g_io_module_openssl_register ();
- #endif
- 
-+	g_set_prgname ("{FRIDA_PREFIX}");
-     if (runtime == FRIDA_RUNTIME_OTHER)
-     {
-       main_context = g_main_context_ref (g_main_context_default ());
-       main_loop = g_main_loop_new (main_context, FALSE);
--      main_thread = g_thread_new ("frida-main-loop", run_main_loop, NULL);
-+      main_thread = g_thread_new ("{FRIDA_PREFIX}-main-loop", run_main_loop, NULL);
-     }
- 
-     g_once_init_leave (&frida_initialized, TRUE);
 diff --git a/src/fruity/device-monitor.vala b/src/fruity/device-monitor.vala
 index d4f99d5..09e8eb7 100644
 --- a/src/fruity/device-monitor.vala
@@ -535,82 +317,6 @@ index d4f99d5..09e8eb7 100644
  
  			yield network_browser.start (cancellable);
  
-diff --git a/src/fruity/fruity-host-session.vala b/src/fruity/fruity-host-session.vala
-index cc0806d..4461be8 100644
---- a/src/fruity/fruity-host-session.vala
-+++ b/src/fruity/fruity-host-session.vala
-@@ -182,7 +182,7 @@ namespace Frida {
- 		private Cancellable io_cancellable = new Cancellable ();
- 
- 		private const double MIN_SERVER_CHECK_INTERVAL = 5.0;
--		private const string GADGET_APP_ID = "re.frida.Gadget";
-+		private const string GADGET_APP_ID = "re.{FRIDA_PREFIX}.Gadget";
- 		private const string DEBUGSERVER_ENDPOINT_17PLUS = "com.apple.internal.dt.remote.debugproxy";
- 		private const string DEBUGSERVER_ENDPOINT_14PLUS = "com.apple.debugserver.DVTSecureSocketProxy";
- 		private const string DEBUGSERVER_ENDPOINT_LEGACY = "com.apple.debugserver?tls=handshake-only";
-diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index cb50d61..58f490a 100644
---- a/src/linux/frida-helper-backend.vala
-+++ b/src/linux/frida-helper-backend.vala
-@@ -1242,7 +1242,7 @@ namespace Frida {
- 		}
- 
- 		private static string make_fallback_address () {
--			return "/frida-" + Uuid.string_random ();
-+			return "/{FRIDA_PREFIX}-" + Uuid.string_random ();
- 		}
- 
- 		private Future<RemoteAgent> establish_connection (LoaderLaunch launch, InjectSpec spec, BootstrapResult bres,
-diff --git a/src/linux/frida-helper-process.vala b/src/linux/frida-helper-process.vala
-index 7e5cf0c..7d96f1a 100644
---- a/src/linux/frida-helper-process.vala
-+++ b/src/linux/frida-helper-process.vala
-@@ -315,7 +315,7 @@ namespace Frida {
- 			TimeoutSource? timeout_source = null;
- 
- 			try {
--				string socket_path = "/frida-" + Uuid.string_random ();
-+				string socket_path = "/{FRIDA_PREFIX}-" + Uuid.string_random ();
- 				string socket_address = "unix:abstract=" + socket_path;
- 
- 				service = new SocketService ();
-@@ -626,7 +626,7 @@ namespace Frida {
- 
- 			var blob64 = Frida.Data.Helper.get_frida_helper_64_blob ();
- 			if (blob64.data.length > 0)
--				helper64 = make_temporary_helper ("frida-helper-64", blob64.data);
-+				helper64 = make_temporary_helper ("{FRIDA_PREFIX}-helper-64", blob64.data);
- #else
- 			var tpl = PathTemplate (Config.FRIDA_HELPER_PATH);
- 			string path = tpl.expand ((sizeof (void *) == 8) ? "32" : "64");
-diff --git a/src/linux/linjector.vala b/src/linux/linjector.vala
-index fa6e52c..38ef430 100644
---- a/src/linux/linjector.vala
-+++ b/src/linux/linjector.vala
-@@ -265,20 +265,20 @@ namespace Frida {
- 	private static void adjust_directory_permissions (string path) {
- 		FileUtils.chmod (path, 0755);
- #if ANDROID
--		SELinux.setfilecon (path, "u:object_r:frida_file:s0");
-+		SELinux.setfilecon (path, "u:object_r:{FRIDA_PREFIX}_file:s0");
- #endif
- 	}
- 
- 	private static void adjust_file_permissions (string path) {
- 		FileUtils.chmod (path, path.has_suffix (".so") ? 0755 : 0644);
- #if ANDROID
--		SELinux.setfilecon (path, "u:object_r:frida_file:s0");
-+		SELinux.setfilecon (path, "u:object_r:{FRIDA_PREFIX}_file:s0");
- #endif
- 	}
- 
- 	private static void adjust_fd_permissions (FileDescriptor fd) {
- #if ANDROID
--		SELinux.fsetfilecon (fd.handle, "u:object_r:frida_memfd:s0");
-+		SELinux.fsetfilecon (fd.handle, "u:object_r:{FRIDA_PREFIX}_memfd:s0");
- #endif
- 	}
- }
 diff --git a/src/linux/linux-host-session.vala b/src/linux/linux-host-session.vala
 index eaeaed5..867113f 100644
 --- a/src/linux/linux-host-session.vala
