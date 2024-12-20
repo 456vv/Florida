@@ -1,0 +1,113 @@
+From d6de57431ee0c2b4f3a1f54546289cff3882194a Mon Sep 17 00:00:00 2001
+From: 456vv <123@456vv.com>
+Date: Fri, 20 Dec 2024 16:32:04 +0800
+Subject: [PATCH] all
+
+---
+ inject/meson.build     | 2 +-
+ lib/agent/meson.build  | 2 +-
+ lib/gadget/meson.build | 2 +-
+ portal/meson.build     | 2 +-
+ server/meson.build     | 2 +-
+ src/meson.build        | 6 +++---
+ 6 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/inject/meson.build b/inject/meson.build
+index b9b6760..7ab5a93 100644
+--- a/inject/meson.build
++++ b/inject/meson.build
+@@ -21,7 +21,7 @@ elif host_os_family != 'windows'
+   extra_link_depends += [symscript]
+ endif
+ 
+-raw_inject = executable('frida-inject-raw', inject_sources,
++raw_inject = executable('{FRIDA_PREFIX}-inject-raw', inject_sources,
+   vala_args: [core_vala_args, system_vala_args],
+   link_args: extra_link_args,
+   link_depends: extra_link_depends,
+diff --git a/lib/agent/meson.build b/lib/agent/meson.build
+index 0aab035..c4a7cd7 100644
+--- a/lib/agent/meson.build
++++ b/lib/agent/meson.build
+@@ -38,7 +38,7 @@ if host_os_family in ['linux', 'qnx']
+   extra_link_args += '-Wl,-Bsymbolic'
+ endif
+ 
+-raw_agent = shared_library('frida-agent-raw', agent_sources,
++raw_agent = shared_library('{FRIDA_PREFIX}-agent-raw', agent_sources,
+   name_prefix: 'lib',
+   c_args: frida_component_cflags,
+   vala_header: 'frida-agent.h',
+diff --git a/lib/gadget/meson.build b/lib/gadget/meson.build
+index 00ea0c8..cbc342e 100644
+--- a/lib/gadget/meson.build
++++ b/lib/gadget/meson.build
+@@ -55,7 +55,7 @@ if host_os_family in ['linux', 'qnx']
+   extra_link_args += ['-Wl,-Bsymbolic']
+ endif
+ 
+-raw_gadget = shared_library('frida-gadget-raw', gadget_sources,
++raw_gadget = shared_library('{FRIDA_PREFIX}-gadget-raw', gadget_sources,
+   name_prefix: 'lib',
+   vala_args: [base_vala_args, payload_vala_args, extra_vala_args],
+   vala_header: 'frida-gadget.h',
+diff --git a/portal/meson.build b/portal/meson.build
+index 16e9100..06827e9 100644
+--- a/portal/meson.build
++++ b/portal/meson.build
+@@ -19,7 +19,7 @@ if tls_provider_dep.found()
+   extra_deps += tls_provider_dep
+ endif
+ 
+-raw_portal = executable('frida-portal-raw', portal_sources,
++raw_portal = executable('{FRIDA_PREFIX}-portal-raw', portal_sources,
+   vala_args: [core_vala_args, tls_provider_vala_args, '--pkg=posix'],
+   link_args: extra_link_args,
+   link_depends: extra_link_depends,
+diff --git a/server/meson.build b/server/meson.build
+index dce56ca..b3566f3 100644
+--- a/server/meson.build
++++ b/server/meson.build
+@@ -29,7 +29,7 @@ if host_os == 'macos'
+   extra_link_depends += [server_plist]
+ endif
+ 
+-raw_server = executable('frida-server-raw', server_sources,
++raw_server = executable('{FRIDA_PREFIX}-server-raw', server_sources,
+   vala_args: [core_vala_args, '--pkg=posix'],
+   link_args: extra_link_args,
+   link_depends: extra_link_depends,
+diff --git a/src/meson.build b/src/meson.build
+index 470112a..044f219 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -85,7 +85,7 @@ if have_local_backend
+       'windows' / 'frida-helper-service.vala',
+       'windows' / 'frida-helper-service-glue.c',
+     ]
+-    raw_helper = executable('frida-helper-raw', helper_sources,
++    raw_helper = executable('{FRIDA_PREFIX}-helper-raw', helper_sources,
+       vala_args: helper_backend_vala_args,
+       link_with: helper_backend,
+       dependencies: [gio_dep, gee_dep, gum_dep, base_dep, pipe_dep],
+@@ -209,7 +209,7 @@ if have_local_backend
+       helper_link_args += ['-Wl,-sectcreate,__TEXT,__info_plist,' + meson.current_source_dir() / helper_plist]
+       helper_link_depends += [helper_plist]
+     endif
+-    raw_helper = executable('frida-helper-raw', helper_sources,
++    raw_helper = executable('{FRIDA_PREFIX}-helper-raw', helper_sources,
+       vala_args: [helper_backend_vala_args, '--pkg=posix'],
+       link_args: [helper_link_args, backend_libs_private],
+       link_depends: helper_link_depends,
+@@ -377,7 +377,7 @@ if have_local_backend
+     helper_symscript = 'linux' / 'frida-helper.version'
+     helper_link_args = ['-Wl,--version-script,' + meson.current_source_dir() / helper_symscript]
+     helper_link_depends = [helper_symscript]
+-    raw_helper = executable('frida-helper-raw', helper_sources,
++    raw_helper = executable('{FRIDA_PREFIX}-helper-raw', helper_sources,
+       vala_args: helper_backend_vala_args,
+       link_args: helper_link_args,
+       link_depends: helper_link_depends,
+-- 
+2.47.0.windows.2
+
