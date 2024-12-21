@@ -1,13 +1,46 @@
-From c4fea3eec03d9f8f2c8d1574972c78b70c58353d Mon Sep 17 00:00:00 2001
+From 87abd42622707301cb340193f13cd7cc2f6daf5d Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sat, 21 Dec 2024 01:05:40 +0800
+Date: Sat, 21 Dec 2024 15:19:04 +0800
 Subject: [PATCH] all
 
 ---
- src/anti-anti-frida.py | 56 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
+ lib/base/rpc.vala                             |  6 +-
+ src/anti-anti-frida.py                        | 56 +++++++++++++++++++
+ .../script-runtime/message-dispatcher.ts      |  6 +-
+ 3 files changed, 62 insertions(+), 6 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
+diff --git a/lib/base/rpc.vala b/lib/base/rpc.vala
+index 8990b70..dadc268 100644
+--- a/lib/base/rpc.vala
++++ b/lib/base/rpc.vala
+@@ -17,7 +17,7 @@ namespace Frida {
+ 			var request = new Json.Builder ();
+ 			request
+ 				.begin_array ()
+-				.add_string_value ("frida:rpc")
++				.add_string_value ("{FRIDA_PREFIX}:rpc")
+ 				.add_string_value (request_id)
+ 				.add_string_value ("call")
+ 				.add_string_value (method)
+@@ -70,7 +70,7 @@ namespace Frida {
+ 		}
+ 
+ 		public bool try_handle_message (string json) {
+-			if (json.index_of ("\"frida:rpc\"") == -1)
++			if (json.index_of ("\"{FRIDA_PREFIX}:rpc\"") == -1)
+ 				return false;
+ 
+ 			var parser = new Json.Parser ();
+@@ -99,7 +99,7 @@ namespace Frida {
+ 				return false;
+ 
+ 			string? type = rpc_message.get_element (0).get_string ();
+-			if (type == null || type != "frida:rpc")
++			if (type == null || type != "{FRIDA_PREFIX}:rpc")
+ 				return false;
+ 
+ 			var request_id_value = rpc_message.get_element (1);
 diff --git a/src/anti-anti-frida.py b/src/anti-anti-frida.py
 new file mode 100644
 index 0000000..b642624
@@ -70,6 +103,31 @@ index 0000000..b642624
 +        print(f"[*] Patch `{i}` to `{random_name}`")
 +        os.system(f"sed -b -i s/{i}/{random_name}/g {input_file}")
 +        print(f'sed -b -i s/{i}/{random_name}/g {input_file}')
+diff --git a/src/barebone/script-runtime/message-dispatcher.ts b/src/barebone/script-runtime/message-dispatcher.ts
+index 13b3ba1..4742a3a 100644
+--- a/src/barebone/script-runtime/message-dispatcher.ts
++++ b/src/barebone/script-runtime/message-dispatcher.ts
+@@ -3,7 +3,7 @@ export class MessageDispatcher {
+     #operations = new Map<string, MessageHandler[]>();
+ 
+     dispatch(message: any, data: ArrayBuffer | null) {
+-        if (message instanceof Array && message[0] === "frida:rpc") {
++        if (message instanceof Array && message[0] === "{FRIDA_PREFIX}:rpc") {
+             this.#handleRpcMessage(message[1], message[2], message.slice(3));
+         } else {
+             this.#messages.push([message, data]);
+@@ -63,9 +63,9 @@ export class MessageDispatcher {
+ 
+     #reply(id: number, type: RpcMessageType, result: any, params: any[] = []) {
+         if (result instanceof ArrayBuffer)
+-            send(["frida:rpc", id, type, {}].concat(params), result);
++            send(["{FRIDA_PREFIX}:rpc", id, type, {}].concat(params), result);
+         else
+-            send(["frida:rpc", id, type, result].concat(params));
++            send(["{FRIDA_PREFIX}:rpc", id, type, result].concat(params));
+     }
+ 
+     #dispatchMessages() {
 -- 
 2.47.0.windows.2
 
