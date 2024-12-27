@@ -1,15 +1,14 @@
-From 852250b260da0684d70ccf0c721dab74157e7587 Mon Sep 17 00:00:00 2001
+From 43a1056117e895692fd81a951d35110315697984 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sat, 21 Dec 2024 22:44:15 +0800
+Date: Fri, 27 Dec 2024 22:52:40 +0800
 Subject: [PATCH] all
 
 ---
- lib/agent/meson.build               | 2 +-
- lib/gadget/meson.build              | 2 +-
- src/droidy/droidy-host-session.vala | 4 ++--
- src/droidy/injector.vala            | 2 +-
- src/meson.build                     | 6 +++---
- 5 files changed, 8 insertions(+), 8 deletions(-)
+ lib/agent/meson.build    | 2 +-
+ lib/gadget/meson.build   | 2 +-
+ src/droidy/injector.vala | 2 +-
+ src/meson.build          | 6 +++---
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/lib/agent/meson.build b/lib/agent/meson.build
 index 0aab035..c4a7cd7 100644
@@ -37,28 +36,6 @@ index 00ea0c8..cbc342e 100644
    name_prefix: 'lib',
    vala_args: [base_vala_args, payload_vala_args, extra_vala_args],
    vala_header: 'frida-gadget.h',
-diff --git a/src/droidy/droidy-host-session.vala b/src/droidy/droidy-host-session.vala
-index 0a8dc6f..5bc0d6f 100644
---- a/src/droidy/droidy-host-session.vala
-+++ b/src/droidy/droidy-host-session.vala
-@@ -214,7 +214,7 @@ namespace Frida {
- 		private Cancellable io_cancellable = new Cancellable ();
- 
- 		private const double MIN_SERVER_CHECK_INTERVAL = 5.0;
--		private const string GADGET_APP_ID = "re.frida.Gadget";
-+		private const string GADGET_APP_ID = "re.{FRIDA_PREFIX}.Gadget";
- 
- 		public DroidyHostSession (Droidy.DeviceDetails device_details, HostChannelProvider channel_provider) {
- 			Object (
-@@ -490,7 +490,7 @@ namespace Frida {
- 				if (opts.has_selected_identifiers ()) {
- 					gadget_is_selected = false;
- 					opts.enumerate_selected_identifiers (identifier => {
--						if (identifier == "re.frida.Gadget")
-+						if (identifier == "re.{FRIDA_PREFIX}.Gadget")
- 							gadget_is_selected = true;
- 					});
- 				}
 diff --git a/src/droidy/injector.vala b/src/droidy/injector.vala
 index f2acafb..7aeb17c 100644
 --- a/src/droidy/injector.vala
