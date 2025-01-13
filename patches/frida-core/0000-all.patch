@@ -1,6 +1,6 @@
-From 6e72088beb5fd56b038931280a4c8deee54c38dd Mon Sep 17 00:00:00 2001
+From e46dcd2e887c13970f4a359dc8e4518d1822bf68 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sat, 28 Dec 2024 22:40:51 +0800
+Date: Mon, 13 Jan 2025 20:54:42 +0800
 Subject: [PATCH] all
 
 ---
@@ -10,7 +10,7 @@ Subject: [PATCH] all
  lib/base/p2p.vala                             |  2 +-
  lib/base/rpc.vala                             |  6 +-
  lib/base/session.vala                         |  2 +-
- lib/base/socket.vala                          | 14 ++---
+ lib/base/socket.vala                          | 10 ++--
  lib/gadget/gadget-glue.c                      |  2 +-
  lib/gadget/gadget.vala                        |  4 +-
  lib/gadget/meson.build                        |  2 +-
@@ -26,17 +26,18 @@ Subject: [PATCH] all
  src/droidy/injector.vala                      |  2 +-
  src/freebsd/binjector-glue.c                  |  2 +-
  src/frida-glue.c                              |  3 +-
+ src/frida.vala                                |  2 +-
  src/linux/frida-helper-backend.vala           |  2 +-
  src/linux/frida-helper-process.vala           |  4 +-
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
  src/meson.build                               |  6 +-
  src/windows/frida-helper-process.vala         |  2 +-
- 28 files changed, 111 insertions(+), 53 deletions(-)
+ 29 files changed, 110 insertions(+), 52 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
-index 1c5b1b4..df0a280 100644
+index 62786a9..00bb788 100644
 --- a/lib/agent/agent.vala
 +++ b/lib/agent/agent.vala
 @@ -343,7 +343,7 @@ namespace Frida.Agent {
@@ -76,7 +77,7 @@ index 1c5b1b4..df0a280 100644
  				var connection = yield new DBusConnection (stream, ServerGuid.HOST_SESSION_SERVICE,
  					AUTHENTICATION_SERVER | AUTHENTICATION_ALLOW_ANONYMOUS, null, cancellable);
 diff --git a/lib/agent/meson.build b/lib/agent/meson.build
-index 0aab035..c4a7cd7 100644
+index 266decf..11a0626 100644
 --- a/lib/agent/meson.build
 +++ b/lib/agent/meson.build
 @@ -38,7 +38,7 @@ if host_os_family in ['linux', 'qnx']
@@ -159,15 +160,11 @@ index b9e56da..140e3bc 100644
  			agent.ice_tcp = false;
  
 diff --git a/lib/base/socket.vala b/lib/base/socket.vala
-index 07b6ab0..ac6de37 100644
+index 07b6ab0..5e54e3b 100644
 --- a/lib/base/socket.vala
 +++ b/lib/base/socket.vala
-@@ -1,13 +1,13 @@
- namespace Frida {
--	public const uint16 DEFAULT_CONTROL_PORT = 27042;
--	public const uint16 DEFAULT_CLUSTER_PORT = 27052;
-+	public const uint16 DEFAULT_CONTROL_PORT = 27142;
-+	public const uint16 DEFAULT_CLUSTER_PORT = 27152;
+@@ -3,11 +3,11 @@ namespace Frida {
+ 	public const uint16 DEFAULT_CLUSTER_PORT = 27052;
  
  	public SocketConnectable parse_control_address (string? address, uint16 port = 0) throws Error {
 -		return parse_socket_address (address, port, "127.0.0.1", DEFAULT_CONTROL_PORT);
@@ -515,8 +512,21 @@ index ee8f073..beed10a 100644
      }
  
      g_once_init_leave (&frida_initialized, TRUE);
+diff --git a/src/frida.vala b/src/frida.vala
+index 6568612..c3178ea 100644
+--- a/src/frida.vala
++++ b/src/frida.vala
+@@ -2388,7 +2388,7 @@ namespace Frida {
+ 			dbus_context = yield get_dbus_context ();
+ 
+ 			var agent = new Nice.Agent.full (dbus_context, Nice.Compatibility.RFC5245, ICE_TRICKLE);
+-			agent.set_software ("Frida");
++			agent.set_software ("{FRIDA_PREFIX_U}");
+ 			agent.controlling_mode = true;
+ 			agent.ice_tcp = false;
+ 
 diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index cb50d61..58f490a 100644
+index c51531e..4951d86 100644
 --- a/src/linux/frida-helper-backend.vala
 +++ b/src/linux/frida-helper-backend.vala
 @@ -1242,7 +1242,7 @@ namespace Frida {
