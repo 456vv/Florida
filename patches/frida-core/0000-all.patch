@@ -1,6 +1,6 @@
-From e46dcd2e887c13970f4a359dc8e4518d1822bf68 Mon Sep 17 00:00:00 2001
+From c782abdb233ed022caeaa7c75f293d6066302174 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Mon, 13 Jan 2025 20:54:42 +0800
+Date: Thu, 30 Jan 2025 00:09:36 +0800
 Subject: [PATCH] all
 
 ---
@@ -21,7 +21,6 @@ Subject: [PATCH] all
  src/agent-container.vala                      |  2 +-
  src/anti-anti-frida.py                        | 56 +++++++++++++++++++
  .../script-runtime/message-dispatcher.ts      |  6 +-
- src/darwin/frida-helper-service.vala          |  2 +-
  src/droidy/droidy-client.vala                 |  2 +-
  src/droidy/injector.vala                      |  2 +-
  src/freebsd/binjector-glue.c                  |  2 +-
@@ -32,8 +31,7 @@ Subject: [PATCH] all
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
  src/meson.build                               |  6 +-
- src/windows/frida-helper-process.vala         |  2 +-
- 29 files changed, 110 insertions(+), 52 deletions(-)
+ 27 files changed, 108 insertions(+), 50 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -442,19 +440,6 @@ index 13b3ba1..4742a3a 100644
      }
  
      #dispatchMessages() {
-diff --git a/src/darwin/frida-helper-service.vala b/src/darwin/frida-helper-service.vala
-index 5847c48..09f0e66 100644
---- a/src/darwin/frida-helper-service.vala
-+++ b/src/darwin/frida-helper-service.vala
-@@ -5,7 +5,7 @@ namespace Frida {
- 		Gum.init ();
- 
- 		var parent_address = args[1];
--		var worker = new Thread<int> ("frida-helper-main-loop", () => {
-+		var worker = new Thread<int> ("{FRIDA_PREFIX}-helper-main-loop", () => {
- 			var service = new DarwinHelperService (parent_address);
- 
- 			var exit_code = service.run ();
 diff --git a/src/droidy/droidy-client.vala b/src/droidy/droidy-client.vala
 index ddc56cc..c3464e7 100644
 --- a/src/droidy/droidy-client.vala
@@ -526,10 +511,10 @@ index 6568612..c3178ea 100644
  			agent.ice_tcp = false;
  
 diff --git a/src/linux/frida-helper-backend.vala b/src/linux/frida-helper-backend.vala
-index c51531e..4951d86 100644
+index 9839fbf..94289df 100644
 --- a/src/linux/frida-helper-backend.vala
 +++ b/src/linux/frida-helper-backend.vala
-@@ -1242,7 +1242,7 @@ namespace Frida {
+@@ -1252,7 +1252,7 @@ namespace Frida {
  		}
  
  		private static string make_fallback_address () {
@@ -609,7 +594,7 @@ index eaeaed5..867113f 100644
  				AgentMode.INSTANCED,
  				tempdir);
 diff --git a/src/meson.build b/src/meson.build
-index 470112a..044f219 100644
+index 88ff560..9212434 100644
 --- a/src/meson.build
 +++ b/src/meson.build
 @@ -85,7 +85,7 @@ if have_local_backend
@@ -630,7 +615,7 @@ index 470112a..044f219 100644
        vala_args: [helper_backend_vala_args, '--pkg=posix'],
        link_args: [helper_link_args, backend_libs_private],
        link_depends: helper_link_depends,
-@@ -377,7 +377,7 @@ if have_local_backend
+@@ -380,7 +380,7 @@ if have_local_backend
      helper_symscript = 'linux' / 'frida-helper.version'
      helper_link_args = ['-Wl,--version-script,' + meson.current_source_dir() / helper_symscript]
      helper_link_depends = [helper_symscript]
@@ -639,19 +624,6 @@ index 470112a..044f219 100644
        vala_args: helper_backend_vala_args,
        link_args: helper_link_args,
        link_depends: helper_link_depends,
-diff --git a/src/windows/frida-helper-process.vala b/src/windows/frida-helper-process.vala
-index 682e64e..00d9cb4 100644
---- a/src/windows/frida-helper-process.vala
-+++ b/src/windows/frida-helper-process.vala
-@@ -159,7 +159,7 @@ namespace Frida {
- 
- 				stream_request = Pipe.open (transport.local_address, cancellable);
- 
--				new Thread<bool> ("frida-helper-factory", obtain_worker);
-+				new Thread<bool> ("{FRIDA_PREFIX}-helper-factory", obtain_worker);
- 			}
- 
- 			return yield obtain_request.future.wait_async (cancellable);
 -- 
 2.47.0.windows.2
 
