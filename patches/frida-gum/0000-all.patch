@@ -1,21 +1,21 @@
-From 26820dd4acf25da13dd5248e53eaa851650f4272 Mon Sep 17 00:00:00 2001
+From 36463101999fab8af7c9b94526d6450128894d56 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sat, 1 Feb 2025 23:46:18 +0800
+Date: Sun, 2 Feb 2025 00:30:09 +0800
 Subject: [PATCH] all
 
 ---
- bindings/gumjs/generate-runtime.py           | 12 ++++++++++++
+ bindings/gumjs/generate-runtime.py           | 14 ++++++++++++++
  bindings/gumjs/gumscriptscheduler.c          |  2 +-
  bindings/gumjs/runtime/message-dispatcher.js |  8 ++++----
  bindings/gumjs/runtime/worker.js             |  4 ++--
  gum/gum.c                                    |  2 +-
- 5 files changed, 20 insertions(+), 8 deletions(-)
+ 5 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
-index 0c1d406..f13b942 100644
+index 0c1d406..35bd983 100644
 --- a/bindings/gumjs/generate-runtime.py
 +++ b/bindings/gumjs/generate-runtime.py
-@@ -56,6 +56,18 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
+@@ -56,6 +56,20 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
                         capture_output=True,
                         cwd=priv_dir,
                         check=True)
@@ -24,13 +24,15 @@ index 0c1d406..f13b942 100644
 +        #(js_dir / "android.js").write_text("暂时不改这里", encoding="utf-8")
 +
 +        #在 Java.api.exports 使用更多内置方法
-+        subprocess.run("sed -i 's/module.exports/module.exports = temporaryApi.exports/g' {}".format(js_dir / "android.js"), shell=True)
++        js_file = js_dir / "android.js"
++        subprocess.run(f"sed -i 's/module.exports/module.exports = temporaryApi.exports/g' {js_file}", shell=True)
 +
 +        #这条是可以使用 Interceptor.revert(addr) 来撤掉，所以不处理它
 +        #subprocess.run("sed -i '/Interceptor.attach(prettyMethod.impl, artController.hooks.ArtMethod.prettyMethod);/,/Interceptor.flush();/{d}' %s" % (js_dir / "android.js"), shell=True)
 +
 +        #这个用处不清楚
-+        #subprocess.run(f"sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g ' {(js_dir / 'vm.js')}", shell=True)
++        js_file = js_dir / "vm.js"
++        subprocess.run(f"sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' {js_file}", shell=True)
  
      runtime_reldir = Path("runtime")
      runtime_srcdir = input_dir / runtime_reldir
