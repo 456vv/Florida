@@ -1,6 +1,6 @@
-From 36463101999fab8af7c9b94526d6450128894d56 Mon Sep 17 00:00:00 2001
+From faa457aa79b995d2b3c23b400c9d8b196a9a5c76 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sun, 2 Feb 2025 00:30:09 +0800
+Date: Sun, 2 Feb 2025 00:50:19 +0800
 Subject: [PATCH] all
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH] all
  5 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
-index 0c1d406..35bd983 100644
+index 0c1d406..2cb4c96 100644
 --- a/bindings/gumjs/generate-runtime.py
 +++ b/bindings/gumjs/generate-runtime.py
 @@ -56,6 +56,20 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
@@ -25,14 +25,14 @@ index 0c1d406..35bd983 100644
 +
 +        #在 Java.api.exports 使用更多内置方法
 +        js_file = js_dir / "android.js"
-+        subprocess.run(f"sed -i 's/module.exports/module.exports = temporaryApi.exports/g' {js_file}", shell=True)
++        subprocess.run("sed -i 's/module.exports/module.exports = temporaryApi.exports/g' %s" % (js_file), shell=True)
 +
 +        #这条是可以使用 Interceptor.revert(addr) 来撤掉，所以不处理它
 +        #subprocess.run("sed -i '/Interceptor.attach(prettyMethod.impl, artController.hooks.ArtMethod.prettyMethod);/,/Interceptor.flush();/{d}' %s" % (js_dir / "android.js"), shell=True)
 +
 +        #这个用处不清楚
 +        js_file = js_dir / "vm.js"
-+        subprocess.run(f"sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' {js_file}", shell=True)
++        subprocess.run("sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' %s" % (js_file), shell=True)
  
      runtime_reldir = Path("runtime")
      runtime_srcdir = input_dir / runtime_reldir
