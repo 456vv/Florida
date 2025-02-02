@@ -1,6 +1,6 @@
-From 09c3d2ec77bcf82f0b9e99f18d9679686c7980bd Mon Sep 17 00:00:00 2001
+From 6d19d66b01a45b5ba9387b18cbaa223e0ade0492 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Sun, 2 Feb 2025 01:09:40 +0800
+Date: Sun, 2 Feb 2025 11:09:27 +0800
 Subject: [PATCH] all
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH] all
  5 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
-index 0c1d406..a0f64eb 100644
+index 0c1d406..08f8bd2 100644
 --- a/bindings/gumjs/generate-runtime.py
 +++ b/bindings/gumjs/generate-runtime.py
 @@ -56,6 +56,20 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
@@ -31,8 +31,8 @@ index 0c1d406..a0f64eb 100644
 +        #subprocess.run("sed -i '/Interceptor.attach(prettyMethod.impl, artController.hooks.ArtMethod.prettyMethod);/,/Interceptor.flush();/{d}' %s" % (js_dir / "android.js"), shell=True)
 +
 +        #这个用处不清楚
-+        js_file = js_dir / "vm.js"
-+        subprocess.run("sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' %s" % (js_file), shell=True)
++        #js_file = js_dir / "vm.js"
++        #subprocess.run("sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' %s" % (js_file), shell=True)
  
      runtime_reldir = Path("runtime")
      runtime_srcdir = input_dir / runtime_reldir
