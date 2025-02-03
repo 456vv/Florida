@@ -1,0 +1,25 @@
+From 77842c617b0bc96ddf969c072acb3cd72f4252d5 Mon Sep 17 00:00:00 2001
+From: 456vv <123@456vv.com>
+Date: Mon, 3 Feb 2025 17:51:26 +0800
+Subject: [PATCH] all
+
+---
+ gum/gum.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gum/gum.c b/gum/gum.c
+index 03ba89c..ddf4ed2 100644
+--- a/gum/gum.c
++++ b/gum/gum.c
+@@ -302,7 +302,7 @@ gum_init_embedded (void)
+   g_log_set_default_handler (gum_on_log_message, NULL);
+   gum_do_init ();
+ 
+-  g_set_prgname ("frida");
++  g_set_prgname ("{FRIDA_PREFIX}");
+ 
+ #if defined (HAVE_LINUX) && defined (HAVE_GLIBC)
+   gum_libdl_prevent_unload ();
+-- 
+2.47.0.windows.2
+
