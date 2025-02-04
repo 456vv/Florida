@@ -1,0 +1,37 @@
+From c0b3c1d83b7cd1359fce272b097550bfa8a0b2bd Mon Sep 17 00:00:00 2001
+From: 456vv <123@456vv.com>
+Date: Tue, 4 Feb 2025 18:26:19 +0800
+Subject: [PATCH] all
+
+---
+ bindings/gumjs/generate-runtime.py | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
+index 0c1d406..a0f64eb 100644
+--- a/bindings/gumjs/generate-runtime.py
++++ b/bindings/gumjs/generate-runtime.py
+@@ -56,6 +56,20 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
+                        capture_output=True,
+                        cwd=priv_dir,
+                        check=True)
++        js_dir = priv_dir / "node_modules" / "frida-java-bridge" / "lib" 
++
++        #(js_dir / "android.js").write_text("暂时不改这里", encoding="utf-8")
++
++        #在 Java.api.exports 使用更多内置方法
++        #js_file = js_dir / "android.js"
++        #subprocess.run("sed -i 's/module.exports/module.exports = temporaryApi.exports/g' %s" % (js_file), shell=True)
++
++        #这条是可以使用 Interceptor.revert(addr) 来撤掉，所以不处理它
++        #subprocess.run("sed -i '/Interceptor.attach(prettyMethod.impl, artController.hooks.ArtMethod.prettyMethod);/,/Interceptor.flush();/{d}' %s" % (js_dir / "android.js"), shell=True)
++
++        #这个用处不清楚
++        js_file = js_dir / "vm.js"
++        subprocess.run("sed -i 's/Current thread is not attached to the Java VM; please move this code inside a Java.perform() callback/VM Error/g' %s" % (js_file), shell=True)
+ 
+     runtime_reldir = Path("runtime")
+     runtime_srcdir = input_dir / runtime_reldir
+-- 
+2.47.0.windows.2
+
