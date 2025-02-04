@@ -1,15 +1,11 @@
-From 57bc2c173ad77a480b2db32cf2a0b2948f2761f7 Mon Sep 17 00:00:00 2001
+From f4e24671c2857c161cb2449883d2e07f1a42eda8 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Tue, 4 Feb 2025 11:21:45 +0800
+Date: Tue, 4 Feb 2025 11:43:37 +0800
 Subject: [PATCH] all
 
 ---
- lib/agent/agent.vala     | 8 ++++----
- lib/base/p2p.vala        | 2 +-
- lib/gadget/gadget-glue.c | 2 +-
- src/agent-container.vala | 2 +-
- src/frida-glue.c         | 3 ++-
- 5 files changed, 9 insertions(+), 8 deletions(-)
+ lib/agent/agent.vala | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
 index 62786a9..00bb788 100644
@@ -51,63 +47,6 @@ index 62786a9..00bb788 100644
  
  				var connection = yield new DBusConnection (stream, ServerGuid.HOST_SESSION_SERVICE,
  					AUTHENTICATION_SERVER | AUTHENTICATION_ALLOW_ANONYMOUS, null, cancellable);
-diff --git a/lib/base/p2p.vala b/lib/base/p2p.vala
-index 449eb94..d4ad4f0 100644
---- a/lib/base/p2p.vala
-+++ b/lib/base/p2p.vala
-@@ -1087,7 +1087,7 @@ namespace Frida {
- 		string? result_cert_pem = null;
- 		string? result_key_pem = null;
- 
--		new Thread<bool> ("frida-generate-certificate", () => {
-+		new Thread<bool> ("{FRIDA_PREFIX}-generate-certificate", () => {
- 			uint8[] local_cert_der;
- 			string local_cert_pem;
- 			string local_key_pem;
-diff --git a/lib/gadget/gadget-glue.c b/lib/gadget/gadget-glue.c
-index 256b8d9..8ff997e 100644
---- a/lib/gadget/gadget-glue.c
-+++ b/lib/gadget/gadget-glue.c
-@@ -106,7 +106,7 @@ frida_gadget_environment_init (void)
- 
-   worker_context = g_main_context_ref (g_main_context_default ());
-   worker_loop = g_main_loop_new (worker_context, FALSE);
--  worker_thread = g_thread_new ("frida-gadget", run_worker_loop, NULL);
-+  worker_thread = g_thread_new ("{FRIDA_PREFIX}-gadget", run_worker_loop, NULL);
- }
- 
- void
-diff --git a/src/agent-container.vala b/src/agent-container.vala
-index 73e0c01..553a683 100644
---- a/src/agent-container.vala
-+++ b/src/agent-container.vala
-@@ -103,7 +103,7 @@ namespace Frida {
- 		}
- 
- 		private void start_worker_thread () {
--			thread = new Thread<bool> ("frida-agent-container", run);
-+			thread = new Thread<bool> ("{FRIDA_PREFIX}-agent-container", run);
- 		}
- 
- 		private void stop_worker_thread () {
-diff --git a/src/frida-glue.c b/src/frida-glue.c
-index ee8f073..beed10a 100644
---- a/src/frida-glue.c
-+++ b/src/frida-glue.c
-@@ -40,11 +40,12 @@ frida_init_with_runtime (FridaRuntime rt)
-     g_io_module_openssl_register ();
- #endif
- 
-+	g_set_prgname ("{FRIDA_PREFIX}");
-     if (runtime == FRIDA_RUNTIME_OTHER)
-     {
-       main_context = g_main_context_ref (g_main_context_default ());
-       main_loop = g_main_loop_new (main_context, FALSE);
--      main_thread = g_thread_new ("frida-main-loop", run_main_loop, NULL);
-+      main_thread = g_thread_new ("{FRIDA_PREFIX}-main-loop", run_main_loop, NULL);
-     }
- 
-     g_once_init_leave (&frida_initialized, TRUE);
 -- 
 2.47.0.windows.2
 
