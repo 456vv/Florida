@@ -1,6 +1,6 @@
-From d210a1f9cf466176a55c07424e532419f23fc049 Mon Sep 17 00:00:00 2001
+From 23d9327512fdf5032441c6c0ec09b5d0c2cd3e5b Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Tue, 4 Feb 2025 12:29:41 +0800
+Date: Tue, 4 Feb 2025 19:27:00 +0800
 Subject: [PATCH] all
 
 ---
@@ -21,7 +21,6 @@ Subject: [PATCH] all
  src/agent-container.vala                      |  2 +-
  src/anti-anti-frida.py                        | 56 +++++++++++++++++++
  .../script-runtime/message-dispatcher.ts      |  6 +-
- src/droidy/droidy-client.vala                 |  2 +-
  src/droidy/injector.vala                      |  2 +-
  src/freebsd/binjector-glue.c                  |  2 +-
  src/frida-glue.c                              |  3 +-
@@ -31,7 +30,7 @@ Subject: [PATCH] all
  src/linux/linjector.vala                      |  6 +-
  src/linux/linux-host-session.vala             |  6 +-
  src/meson.build                               |  6 +-
- 27 files changed, 108 insertions(+), 50 deletions(-)
+ 26 files changed, 107 insertions(+), 49 deletions(-)
  create mode 100644 src/anti-anti-frida.py
 
 diff --git a/lib/agent/agent.vala b/lib/agent/agent.vala
@@ -440,19 +439,6 @@ index 13b3ba1..4742a3a 100644
      }
  
      #dispatchMessages() {
-diff --git a/src/droidy/droidy-client.vala b/src/droidy/droidy-client.vala
-index ddc56cc..c3464e7 100644
---- a/src/droidy/droidy-client.vala
-+++ b/src/droidy/droidy-client.vala
-@@ -1015,7 +1015,7 @@ namespace Frida.Droidy {
- 						case "OPEN":
- 						case "CLSE":
- 						case "WRTE":
--							throw new Error.PROTOCOL ("Unexpected command");
-+							break; // throw new Error.PROTOCOL ("Unexpected command");
- 
- 						default:
- 							var length = parse_length (command_or_length);
 diff --git a/src/droidy/injector.vala b/src/droidy/injector.vala
 index f2acafb..7aeb17c 100644
 --- a/src/droidy/injector.vala
