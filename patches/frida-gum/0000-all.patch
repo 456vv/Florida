@@ -1,13 +1,14 @@
-From 0a6a16077c7b8f2b006893ba753993ed282c1821 Mon Sep 17 00:00:00 2001
+From 13f9e191d1c9e8474b2b728a0e193fd79c4e8cfe Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Wed, 5 Feb 2025 18:10:25 +0800
+Date: Wed, 5 Feb 2025 19:06:44 +0800
 Subject: [PATCH] all
 
 ---
  bindings/gumjs/generate-runtime.py           | 14 ++++++++++++++
+ bindings/gumjs/gumscriptscheduler.c          |  2 +-
  bindings/gumjs/runtime/message-dispatcher.js |  8 ++++----
  bindings/gumjs/runtime/worker.js             |  4 ++--
- 3 files changed, 20 insertions(+), 6 deletions(-)
+ 4 files changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
 index 0c1d406..2cb4c96 100644
@@ -34,6 +35,19 @@ index 0c1d406..2cb4c96 100644
  
      runtime_reldir = Path("runtime")
      runtime_srcdir = input_dir / runtime_reldir
+diff --git a/bindings/gumjs/gumscriptscheduler.c b/bindings/gumjs/gumscriptscheduler.c
+index b86a6c5..cc8c726 100644
+--- a/bindings/gumjs/gumscriptscheduler.c
++++ b/bindings/gumjs/gumscriptscheduler.c
+@@ -114,7 +114,7 @@ gum_script_scheduler_start (GumScriptScheduler * self)
+   {
+     self->js_loop = g_main_loop_new (self->js_context, TRUE);
+ 
+-    self->js_thread = g_thread_new ("gum-js-loop",
++    self->js_thread = g_thread_new ("{FRIDA_PREFIX}-js-loop",
+         (GThreadFunc) gum_script_scheduler_run_js_loop, self);
+   }
+ }
 diff --git a/bindings/gumjs/runtime/message-dispatcher.js b/bindings/gumjs/runtime/message-dispatcher.js
 index e6dcaba..9cd8351 100644
 --- a/bindings/gumjs/runtime/message-dispatcher.js
