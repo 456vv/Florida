@@ -1,6 +1,6 @@
-From ddc8188f6b90314c52fbfdcddb50f919dc393aa6 Mon Sep 17 00:00:00 2001
+From 9d44cf336c3468119f55e566856c0d0f90c8c476 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Wed, 5 Feb 2025 14:03:10 +0800
+Date: Wed, 5 Feb 2025 14:32:15 +0800
 Subject: [PATCH] all
 
 ---
@@ -12,7 +12,7 @@ Subject: [PATCH] all
  5 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
-index 0c1d406..2cb4c96 100644
+index 0c1d406..a0f64eb 100644
 --- a/bindings/gumjs/generate-runtime.py
 +++ b/bindings/gumjs/generate-runtime.py
 @@ -56,6 +56,20 @@ def generate_runtime(output_dir, priv_dir, input_dir, gum_dir, capstone_incdir,
@@ -24,8 +24,8 @@ index 0c1d406..2cb4c96 100644
 +        #(js_dir / "android.js").write_text("暂时不改这里", encoding="utf-8")
 +
 +        #在 Java.api.exports 使用更多内置方法
-+        js_file = js_dir / "android.js"
-+        subprocess.run("sed -i 's/module.exports/module.exports = temporaryApi.exports/g' %s" % (js_file), shell=True)
++        #js_file = js_dir / "android.js"
++        #subprocess.run("sed -i 's/module.exports/module.exports = temporaryApi.exports/g' %s" % (js_file), shell=True)
 +
 +        #这条是可以使用 Interceptor.revert(addr) 来撤掉，所以不处理它
 +        #subprocess.run("sed -i '/Interceptor.attach(prettyMethod.impl, artController.hooks.ArtMethod.prettyMethod);/,/Interceptor.flush();/{d}' %s" % (js_dir / "android.js"), shell=True)
