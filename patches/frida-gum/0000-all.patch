@@ -1,12 +1,15 @@
-From b4ecfa341b6067b30f537d2975a62d2a773c606a Mon Sep 17 00:00:00 2001
+From ddc8188f6b90314c52fbfdcddb50f919dc393aa6 Mon Sep 17 00:00:00 2001
 From: 456vv <123@456vv.com>
-Date: Wed, 5 Feb 2025 13:05:17 +0800
+Date: Wed, 5 Feb 2025 14:03:10 +0800
 Subject: [PATCH] all
 
 ---
- bindings/gumjs/generate-runtime.py | 14 ++++++++++++++
- gum/gum.c                          |  2 +-
- 2 files changed, 15 insertions(+), 1 deletion(-)
+ bindings/gumjs/generate-runtime.py           | 14 ++++++++++++++
+ bindings/gumjs/gumscriptscheduler.c          |  2 +-
+ bindings/gumjs/runtime/message-dispatcher.js |  8 ++++----
+ bindings/gumjs/runtime/worker.js             |  4 ++--
+ gum/gum.c                                    |  2 +-
+ 5 files changed, 22 insertions(+), 8 deletions(-)
 
 diff --git a/bindings/gumjs/generate-runtime.py b/bindings/gumjs/generate-runtime.py
 index 0c1d406..2cb4c96 100644
@@ -33,6 +36,69 @@ index 0c1d406..2cb4c96 100644
  
      runtime_reldir = Path("runtime")
      runtime_srcdir = input_dir / runtime_reldir
+diff --git a/bindings/gumjs/gumscriptscheduler.c b/bindings/gumjs/gumscriptscheduler.c
+index b86a6c5..cc8c726 100644
+--- a/bindings/gumjs/gumscriptscheduler.c
++++ b/bindings/gumjs/gumscriptscheduler.c
+@@ -114,7 +114,7 @@ gum_script_scheduler_start (GumScriptScheduler * self)
+   {
+     self->js_loop = g_main_loop_new (self->js_context, TRUE);
+ 
+-    self->js_thread = g_thread_new ("gum-js-loop",
++    self->js_thread = g_thread_new ("{FRIDA_PREFIX}-js-loop",
+         (GThreadFunc) gum_script_scheduler_run_js_loop, self);
+   }
+ }
+diff --git a/bindings/gumjs/runtime/message-dispatcher.js b/bindings/gumjs/runtime/message-dispatcher.js
+index e6dcaba..9cd8351 100644
+--- a/bindings/gumjs/runtime/message-dispatcher.js
++++ b/bindings/gumjs/runtime/message-dispatcher.js
+@@ -25,7 +25,7 @@ function MessageDispatcher() {
+ 
+   function handleMessage(rawMessage, data) {
+     const message = JSON.parse(rawMessage);
+-    if (message instanceof Array && message[0] === 'frida:rpc') {
++    if (message instanceof Array && message[0] === '{FRIDA_PREFIX}:rpc') {
+       handleRpcMessage(message[1], message[2], message.slice(3), data);
+     } else {
+       messages.push([message, data]);
+@@ -70,11 +70,11 @@ function MessageDispatcher() {
+   function reply(id, type, result, params = []) {
+     if (Array.isArray(result) && result.length === 2 && result[1] instanceof ArrayBuffer) {
+       const [value, data] = result;
+-      send(['frida:rpc', id, type, undefined, value, ...params], data);
++      send(['{FRIDA_PREFIX}:rpc', id, type, undefined, value, ...params], data);
+     } else if (result instanceof ArrayBuffer) {
+-      send(['frida:rpc', id, type, undefined, ...params], result);
++      send(['{FRIDA_PREFIX}:rpc', id, type, undefined, ...params], result);
+     } else {
+-      send(['frida:rpc', id, type, result, ...params]);
++      send(['{FRIDA_PREFIX}:rpc', id, type, result, ...params]);
+     }
+   }
+ 
+diff --git a/bindings/gumjs/runtime/worker.js b/bindings/gumjs/runtime/worker.js
+index 1cb5914..9515552 100644
+--- a/bindings/gumjs/runtime/worker.js
++++ b/bindings/gumjs/runtime/worker.js
+@@ -28,7 +28,7 @@ class Worker {
+ 
+     const {payload} = message;
+ 
+-    if (Array.isArray(payload) && payload[0] === 'frida:rpc') {
++    if (Array.isArray(payload) && payload[0] === '{FRIDA_PREFIX}:rpc') {
+       const [, id, operation, ...params] = payload;
+       this._onRpcMessage(id, operation, params, data);
+       return;
+@@ -50,7 +50,7 @@ class Worker {
+           reject(error);
+       });
+ 
+-      this.post(['frida:rpc', id, operation].concat(params));
++      this.post(['{FRIDA_PREFIX}:rpc', id, operation].concat(params));
+     });
+   }
+ 
 diff --git a/gum/gum.c b/gum/gum.c
 index 03ba89c..ddf4ed2 100644
 --- a/gum/gum.c
