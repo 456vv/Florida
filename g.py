@@ -15,7 +15,7 @@ class SimpleLCG:
 
 def	main():
 	# 默认字符集为小写和大写字母
-	char_set = string.ascii_lowercase +	string.ascii_uppercase
+	char_set = string.ascii_lowercase
 	
 	try:
 		# 获取命令行参数
